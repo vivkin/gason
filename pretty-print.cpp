@@ -12,7 +12,7 @@ void print_json(JsonValue o, int indent = 0)
 	switch (o.getTag())
 	{
 		case JSON_TAG_NUMBER:
-			fprintf(stdout, "%.2f", o.toNumber());
+			fprintf(stdout, "%g", o.toNumber());
 			break;
 		case JSON_TAG_BOOL:
 			fprintf(stdout, o.toBool() ? "true" : "false");
