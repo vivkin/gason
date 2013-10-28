@@ -71,16 +71,16 @@ void *JsonAllocator::allocate(size_t n, size_t align)
 	if (head)
 	{
 		char *p = (char *)align_pointer(head->end, align);
-		if (p + n <= (char *)head + 4096)
+		if (p + n <= (char *)head + JSON_ZONE_SIZE)
 		{
 			head->end = p + n;
 			return p;
 		}
 	}
 	size_t zone_size = sizeof(Zone) + n + align;
-	Zone *z = (Zone *)malloc(zone_size > 4096 ? zone_size : 4096);
+	Zone *z = (Zone *)malloc(zone_size > JSON_ZONE_SIZE ? zone_size : JSON_ZONE_SIZE);
 	char *p = (char *)align_pointer(z + 1, align);
-	if (head && zone_size > 4096)
+	if (head && zone_size > JSON_ZONE_SIZE)
 	{
 		z->next = head->next;
 		head->next = z;
@@ -124,8 +124,7 @@ struct JsonList
 
 JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator)
 {
-	const int stack_size = 128;
-	JsonList stack[stack_size];
+	JsonList stack[JSON_STACK_SIZE];
 	int top = -1;
 
 	while (*str)
@@ -230,20 +229,20 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 				}
 				break;
 			case '[':
-				if (++top == stack_size) return JSON_PARSE_OVERFLOW;
+				if (++top == JSON_STACK_SIZE) return JSON_PARSE_STACK_OVERFLOW;
 				stack[top].reset(JSON_TAG_ARRAY);
 				continue;
 			case ']':
-				if (top == -1) return JSON_PARSE_UNDERFLOW;
+				if (top == -1) return JSON_PARSE_STACK_UNDERFLOW;
 				if (stack[top].tag != JSON_TAG_ARRAY) return JSON_PARSE_MISMATCH_BRACKET;
 				o = stack[top--].head;
 				break;
 			case '{':
-				if (++top == stack_size) return JSON_PARSE_OVERFLOW;
+				if (++top == JSON_STACK_SIZE) return JSON_PARSE_STACK_OVERFLOW;
 				stack[top].reset(JSON_TAG_OBJECT);
 				continue;
 			case '}':
-				if (top == -1) return JSON_PARSE_UNDERFLOW;
+				if (top == -1) return JSON_PARSE_STACK_UNDERFLOW;
 				if (stack[top].tag != JSON_TAG_OBJECT) return JSON_PARSE_MISMATCH_BRACKET;
 				o = stack[top--].head;
 				break;

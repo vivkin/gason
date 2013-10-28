@@ -119,7 +119,6 @@ int main(int argc, char **argv)
 #endif
 
 	FILE *fp = nullptr;
-	assert(fp);
 	JsonAllocator allocator;
 	char *source;
 	size_t size;

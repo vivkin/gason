@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include <assert.h>
 
+#define JSON_ZONE_SIZE 4096
+#define JSON_STACK_SIZE 128
+
 struct JsonAllocator
 {
 	struct Zone
@@ -123,8 +126,8 @@ struct JsonElement
 struct JsonPair
 {
 	JsonPair *next;
-	char *key;
 	JsonValue value;
+	char *key;
 };
 
 enum JsonParseStatus
@@ -133,8 +136,8 @@ enum JsonParseStatus
 	JSON_PARSE_BAD_NUMBER,
 	JSON_PARSE_BAD_STRING,
 	JSON_PARSE_UNKNOWN_IDENTIFIER,
-	JSON_PARSE_OVERFLOW,
-	JSON_PARSE_UNDERFLOW,
+	JSON_PARSE_STACK_OVERFLOW,
+	JSON_PARSE_STACK_UNDERFLOW,
 	JSON_PARSE_MISMATCH_BRACKET,
 	JSON_PARSE_UNEXPECTED_CHARACTER
 };
