@@ -130,21 +130,17 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 {
 	JsonList stack[JSON_STACK_SIZE];
 	int top = -1;
-
 	while (*str)
 	{
 		JsonValue o;
-		while (*str && is_space(*str))
-		{
-			++str;
-		}
+		while (*str && is_space(*str)) ++str;
 		*endptr = str++;
 		switch (**endptr)
 		{
 			case '\0':
 				continue;
 			case '-':
-				if (!is_dec(*str) && *str != '.') return JSON_PARSE_BAD_NUMBER;
+				if (!is_dec(*str) && *str != '.') return *endptr = str, JSON_PARSE_BAD_NUMBER;
 			case '0':
 			case '1':
 			case '2':
@@ -215,21 +211,21 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 			case 't':
 				for (const char *s = "rue"; *s; ++s, ++str)
 				{
-					if (*s != *str) return *endptr = str, JSON_PARSE_UNKNOWN_IDENTIFIER;
+					if (*s != *str) return *endptr = str, JSON_PARSE_BAD_IDENTIFIER;
 				}
 				o = JsonValue(JSON_TAG_BOOL, (void *)true);
 				break;
 			case 'f':
 				for (const char *s = "alse"; *s; ++s, ++str)
 				{
-					if (*s != *str) return *endptr = str, JSON_PARSE_UNKNOWN_IDENTIFIER;
+					if (*s != *str) return *endptr = str, JSON_PARSE_BAD_IDENTIFIER;
 				}
 				o = JsonValue(JSON_TAG_BOOL, (void *)false);
 				break;
 			case 'n':
 				for (const char *s = "ull"; *s; ++s, ++str)
 				{
-					if (*s != *str) return *endptr = str, JSON_PARSE_UNKNOWN_IDENTIFIER;
+					if (*s != *str) return *endptr = str, JSON_PARSE_BAD_IDENTIFIER;
 				}
 				break;
 			case '[':
