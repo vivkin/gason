@@ -78,19 +78,19 @@ void *JsonAllocator::allocate(size_t n, size_t align)
 		}
 	}
 	size_t zone_size = sizeof(Zone) + n + align;
-	Zone *z = (Zone *)malloc(zone_size > JSON_ZONE_SIZE ? zone_size : JSON_ZONE_SIZE);
+	Zone *z = (Zone *)malloc(zone_size <= JSON_ZONE_SIZE ? JSON_ZONE_SIZE : zone_size);
 	char *p = (char *)align_pointer(z + 1, align);
-	if (head && zone_size > JSON_ZONE_SIZE)
-	{
-		z->next = head->next;
-		head->next = z;
-	}
-	else
+	z->end = p + n;
+	if (zone_size <= JSON_ZONE_SIZE || head == nullptr)
 	{
 		z->next = head;
 		head = z;
 	}
-	z->end = p + n;
+	else
+	{
+		z->next = head->next;
+		head->next = z;
+	}
 	return p;
 }
 
