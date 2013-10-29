@@ -19,7 +19,7 @@ fuckup() {
 			echo "> $f BAD"
 		fi
 	done
-	echo "=== $PASS/$FAIL"
+	echo "=== $PASS/$[PASS+FAIL]"
 }
 
 echo "Processing fails...";
