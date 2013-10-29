@@ -21,13 +21,13 @@ void print_json(JsonValue o, int indent = 0)
 			fprintf(stdout, "\"%s\"", o.toString());
 			break;
 		case JSON_TAG_ARRAY:
-			if (!o.toElement())
+			if (!o.toNode())
 			{
 				fprintf(stdout, "[]");
 				break;
 			}
 			fprintf(stdout, "[\n");
-			for (auto i = o.toElement(); i; i = i->next)
+			for (auto i : o)
 			{
 				fprintf(stdout, "%*s", indent + INDENT, "");
 				print_json(i->value, indent + INDENT);
@@ -36,13 +36,13 @@ void print_json(JsonValue o, int indent = 0)
 			fprintf(stdout, "%*s]", indent, "");
 			break;
 		case JSON_TAG_OBJECT:
-			if (!o.toPair())
+			if (!o.toNode())
 			{
 				fprintf(stdout, "{}");
 				break;
 			}
 			fprintf(stdout, "{\n");
-			for (auto i = o.toPair(); i; i = i->next)
+			for (auto i : o)
 			{
 				fprintf(stdout, "%*s" "\"%s\": ", indent + INDENT, "", i->key);
 				print_json(i->value, indent + INDENT);

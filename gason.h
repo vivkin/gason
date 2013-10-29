@@ -36,8 +36,7 @@ enum JsonTag
 	JSON_TAG_NULL = 0xF
 };
 
-struct JsonElement;
-struct JsonPair;
+struct JsonNode;
 
 struct JsonValue
 {
@@ -104,31 +103,47 @@ struct JsonValue
 		return (char *)getPayload();
 	}
 
-	JsonElement *toElement() const
+	JsonNode *toNode() const
 	{
-		assert(getTag() == JSON_TAG_ARRAY);
-		return (JsonElement *)getPayload();
-	}
-
-	JsonPair *toPair() const
-	{
-		assert(getTag() == JSON_TAG_OBJECT);
-		return (JsonPair *)getPayload();
+		assert(getTag() == JSON_TAG_ARRAY || getTag() == JSON_TAG_OBJECT);
+		return (JsonNode *)getPayload();
 	}
 };
 
-struct JsonElement
+struct JsonNode
 {
-	JsonElement *next;
 	JsonValue value;
-};
-
-struct JsonPair
-{
-	JsonPair *next;
-	JsonValue value;
+	JsonNode *next;
 	char *key;
 };
+
+struct JsonIterator
+{
+	JsonNode *p;
+
+	void operator++()
+	{
+		p = p->next;
+	}
+
+	bool operator!=(const JsonIterator &x) const
+	{
+		return p != x.p;
+	}
+
+	JsonNode *operator*() const
+	{
+		return p;
+	}
+
+	JsonNode *operator->() const
+	{
+		return p;
+	}
+};
+
+inline JsonIterator begin(JsonValue o) { return JsonIterator{o.toNode()}; }
+inline JsonIterator end(JsonValue o) { return JsonIterator{nullptr}; }
 
 enum JsonParseStatus
 {

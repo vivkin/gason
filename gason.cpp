@@ -100,9 +100,9 @@ struct JsonList
 	JsonValue node;
 	char *key;
 
-	void grow_the_tail(JsonElement *p)
+	void grow_the_tail(JsonNode *p)
 	{
-		JsonElement *tail = (JsonElement *)node.getPayload();
+		JsonNode *tail = (JsonNode *)node.getPayload();
 		if (tail)
 		{
 			p->next = tail->next;
@@ -117,10 +117,10 @@ struct JsonList
 
 	JsonValue cut_the_head()
 	{
-		JsonElement *tail = (JsonElement *)node.getPayload();
+		JsonNode *tail = (JsonNode *)node.getPayload();
 		if (tail)
 		{
-			JsonElement *head = tail->next;
+			JsonNode *head = tail->next;
 			tail->next = nullptr;
 			return JsonValue(tag, head);
 		}
@@ -270,18 +270,17 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 				stack[top].key = o.toString();
 				continue;
 			}
-			JsonPair *p = (JsonPair *)allocator.allocate(sizeof(JsonPair));
+			JsonNode *p = (JsonNode *)allocator.allocate(sizeof(JsonNode));
 			p->value = o;
 			p->key = stack[top].key;
 			stack[top].key = nullptr;
-			stack[top].grow_the_tail((JsonElement *)p);
+			stack[top].grow_the_tail((JsonNode *)p);
 			continue;
 		}
 
-		JsonElement *p = (JsonElement *)allocator.allocate(sizeof(JsonElement));
+		JsonNode *p = (JsonNode *)allocator.allocate(sizeof(JsonNode) - sizeof(JsonNode::key));
 		p->value = o;
 		stack[top].grow_the_tail(p);
 	}
-
 	return JSON_PARSE_BREAKING_BAD;
 }
