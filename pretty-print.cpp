@@ -61,24 +61,34 @@ void print_json(JsonValue o, int indent = 0)
 
 void print_error(const char *filename, JsonParseStatus status, char *endptr, char *source, size_t size)
 {
-	char *first = endptr;
-	while (first != source && *first != '\n') --first;
-	char *last = endptr;
-	while (last != source + size && *last != '\n') ++last;
+	const char *status2str[] = {
+		"JSON_PARSE_OK",
+		"JSON_PARSE_BAD_NUMBER",
+		"JSON_PARSE_BAD_STRING",
+		"JSON_PARSE_BAD_IDENTIFIER",
+		"JSON_PARSE_STACK_OVERFLOW",
+		"JSON_PARSE_STACK_UNDERFLOW",
+		"JSON_PARSE_MISMATCH_BRACKET",
+		"JSON_PARSE_UNEXPECTED_CHARACTER",
+		"JSON_PARSE_UNQUOTED_KEY",
+		"JSON_PARSE_BREAKING_BAD"
+	};
+	char *s = endptr;
+	while (s != source && *s != '\n') --s;
+	if (s != endptr && s != source) ++s;
 	int line = 0;
-	for (char *i = first; i >= source; --i)
+	for (char *i = s; i != source; --i)
 	{
 		if (*i == '\n')
 		{
 			++line;
 		}
 	}
-	int column = (int)(endptr - first);
-	fprintf(stderr, "%s:%d:%d: error %d\n", filename, line + 1, column + 1, (int)status);
-	if (first != source) ++first;
-	for (char *i = first; i < last; ++i)
+	int column = (int)(endptr - s);
+	fprintf(stderr, "%s:%d:%d: error %s\n", filename, line + 1, column + 1, status2str[status]);
+	while (s != source + size && *s != '\n')
 	{
-		int c = *i;
+		int c = *s++;
 		switch (c)
 		{
 			case '\b': fprintf(stderr, "\\b"); column += 1; break;
@@ -97,7 +107,7 @@ uint64_t now()
 {
 	timeval tv;
 	gettimeofday(&tv, nullptr);
-	return tv.tv_sec * 1000ull + tv.tv_usec / 1000;
+	return tv.tv_sec * 1000000ull + tv.tv_usec;
 }
 
 int main(int argc, char **argv)
@@ -118,47 +128,51 @@ int main(int argc, char **argv)
 	signal(SIGABRT, abort_handler);
 #endif
 
-	FILE *fp = nullptr;
-	JsonAllocator allocator;
-	char *source;
-	size_t size;
-	if (argc > 1)
+	const char *filename = "<stdin>";
+	FILE *fp = stdin;
+	char *source = nullptr;
+	size_t source_size = 0;
+	size_t buffer_size = 0;
+	if (argc > 1 && !(argv[1][0] == '-' && argv[1][1] == 0))
 	{
-		if (argv[1][0] == '-' && argv[1][1] == 0)
+		filename = argv[1];
+		fp = fopen(filename, "rb");
+		if (!fp)
 		{
-			fp = stdin;
+			fprintf(stderr, "error: %s: no such file\nusage: json-pretty-print [fileanme]\n", filename);
+			exit(EXIT_FAILURE);
 		}
-		else
-		{
-			fp = fopen(argv[1], "rb");
-		}
-	}
-	if (fp)
-	{
 		fseek(fp, 0, SEEK_END);
-		size = ftell(fp);
+		buffer_size = ftell(fp) + 1;
 		fseek(fp, 0, SEEK_SET);
-		source = (char *)allocator.allocate(size + 1);
-		source[size] = 0;
-		fread(source, 1, size, fp);
-		fclose(fp);
+		source = (char *)malloc(buffer_size);
 	}
-	else
+	while (!feof(fp))
 	{
-		fprintf(stderr, "error: can't open file: %s\nusage: json-pretty-print [fileanme]\n\"-\" as filename for use stdin\n", argv[1]);
-		exit(EXIT_FAILURE);
+		if (source_size + 1 >= buffer_size)
+		{
+			buffer_size = buffer_size < BUFSIZ ? BUFSIZ : buffer_size * 2;
+			source = (char *)realloc(source, buffer_size);
+		}
+		source_size += fread(source + source_size, 1, buffer_size - source_size - 1, fp);
 	}
-	JsonValue value;
+	fclose(fp);
+	source[source_size] = 0;
+
 	char *endptr;
+	JsonValue value;
+	JsonAllocator allocator;
 	uint64_t t = now();
 	JsonParseStatus status = json_parse(source, &endptr, &value, allocator);
 	if (status != JSON_PARSE_OK)
 	{
-		print_error(argv[1], status, endptr, source, size);
+		print_error(filename, status, endptr, source, source_size);
 		exit(EXIT_FAILURE);
 	}
-	fprintf(stderr, "%lld ms\n", now() - t);
+	fprintf(stderr, "%s length %zd, buffer size %zd, parsed for %lluus\n", filename, source_size, buffer_size, now() - t);
+
 	print_json(value);
 	fprintf(stdout, "\n");
+
 	return 0;
 }
