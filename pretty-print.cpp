@@ -103,7 +103,7 @@ void print_error(const char *filename, JsonParseStatus status, char *endptr, cha
 	fprintf(stderr, "\n%*s\n", column + 1, "^");
 }
 
-uint64_t now()
+unsigned long long now()
 {
 	timeval tv;
 	gettimeofday(&tv, nullptr);
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 	char *endptr;
 	JsonValue value;
 	JsonAllocator allocator;
-	uint64_t t = now();
+	unsigned long long t = now();
 	JsonParseStatus status = json_parse(source, &endptr, &value, allocator);
 	if (status != JSON_PARSE_OK)
 	{
