@@ -27,3 +27,4 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 add_executable(gason-pp gason.cpp pretty-print.cpp)
+add_executable(parser-shootout gason.cpp parser-shootout.cpp vjson/block_allocator.cpp vjson/json.cpp)
