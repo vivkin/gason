@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 		print_error(filename, status, endptr, source, source_size);
 		exit(EXIT_FAILURE);
 	}
-	fprintf(stderr, "%s length %zd, buffer size %zd, parsed for %lluus\n", filename, source_size, buffer_size, now() - t);
+	fprintf(stderr, "%s: buffer size %zd, length %zd, parsed %zd bytes for %lluus\n", filename, buffer_size, source_size, endptr - source, now() - t);
 
 	print_json(value);
 	fprintf(stdout, "\n");
