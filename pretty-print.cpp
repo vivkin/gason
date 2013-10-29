@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
+#ifndef NDEBUG
 #include <execinfo.h>
 #include <signal.h>
+#endif
 #include <sys/time.h>
 #include "gason.h"
 
