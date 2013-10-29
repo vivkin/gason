@@ -9,7 +9,7 @@ static const struct ctype_init_t
 	ctype_init_t()
 	{
 		for (int i : "\t\n\v\f\r\x20") ctype[i] |= 001;
-		for (int i : ",]}") ctype[i] |= 002;
+		for (int i : ",:]}") ctype[i] |= 002;
 		for (int i : "+-") ctype[i] |= 004;
 		for (int i : "0123456789") ctype[i] |= 010;
 		for (int i : "ABCDEF" "abcdef") ctype[i] |= 020;
@@ -100,12 +100,13 @@ struct JsonList
 	JsonValue node;
 	char *key;
 
-	template<typename T> void append(T *p)
+	void grow_the_tail(JsonElement *p)
 	{
-		if (node.getPayload())
+		JsonElement *tail = (JsonElement *)node.getPayload();
+		if (tail)
 		{
-			p->next = ((T *)node.getPayload())->next;
-			((T *)node.getPayload())->next = p;
+			p->next = tail->next;
+			tail->next = p;
 		}
 		else
 		{
@@ -116,11 +117,12 @@ struct JsonList
 
 	JsonValue cut_the_head()
 	{
-		if (node.getPayload())
+		JsonElement *tail = (JsonElement *)node.getPayload();
+		if (tail)
 		{
-			JsonValue head(tag, ((JsonElement *)node.getPayload())->next);
-			((JsonElement *)node.getPayload())->next = nullptr;
-			return head;
+			JsonElement *head = tail->next;
+			tail->next = nullptr;
+			return JsonValue(tag, head);
 		}
 		return node;
 	}
@@ -206,7 +208,7 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 						break;
 					}
 				}
-				if (!is_delim(*str) && *str != ':') return *endptr = str, JSON_PARSE_BAD_STRING;
+				if (!is_delim(*str)) return *endptr = str, JSON_PARSE_BAD_STRING;
 				break;
 			case 't':
 				for (const char *s = "rue"; *s; ++s, ++str)
@@ -228,24 +230,24 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 					if (*s != *str) return *endptr = str, JSON_PARSE_BAD_IDENTIFIER;
 				}
 				break;
-			case '[':
-				if (++top == JSON_STACK_SIZE) return JSON_PARSE_STACK_OVERFLOW;
-				stack[top] = {JSON_TAG_ARRAY, JsonValue(JSON_TAG_ARRAY, nullptr), nullptr};
-				continue;
 			case ']':
 				if (top == -1) return JSON_PARSE_STACK_UNDERFLOW;
 				if (stack[top].tag != JSON_TAG_ARRAY) return JSON_PARSE_MISMATCH_BRACKET;
 				o = stack[top--].cut_the_head();
 				break;
-			case '{':
-				if (++top == JSON_STACK_SIZE) return JSON_PARSE_STACK_OVERFLOW;
-				stack[top] = {JSON_TAG_OBJECT, JsonValue(JSON_TAG_OBJECT, nullptr), nullptr};
-				continue;
 			case '}':
 				if (top == -1) return JSON_PARSE_STACK_UNDERFLOW;
 				if (stack[top].tag != JSON_TAG_OBJECT) return JSON_PARSE_MISMATCH_BRACKET;
 				o = stack[top--].cut_the_head();
 				break;
+			case '[':
+				if (++top == JSON_STACK_SIZE) return JSON_PARSE_STACK_OVERFLOW;
+				stack[top] = {JSON_TAG_ARRAY, JsonValue(JSON_TAG_ARRAY, nullptr), nullptr};
+				continue;
+			case '{':
+				if (++top == JSON_STACK_SIZE) return JSON_PARSE_STACK_OVERFLOW;
+				stack[top] = {JSON_TAG_OBJECT, JsonValue(JSON_TAG_OBJECT, nullptr), nullptr};
+				continue;
 			case ':':
 			case ',':
 				continue;
@@ -255,41 +257,31 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 
 		if (top == -1)
 		{
-			stack[0].node = o;
-			break;
+			*endptr = str;
+			*value = o;
+			return JSON_PARSE_OK;
 		}
 
-		switch (stack[top].tag)
+		if (stack[top].tag == JSON_TAG_OBJECT)
 		{
-			case JSON_TAG_ARRAY:
-				{
-					JsonElement *p = (JsonElement *)allocator.allocate(sizeof(JsonElement));
-					p->next = nullptr;
-					p->value = o;
-					stack[top].append(p);
-				}
-				break;
-			case JSON_TAG_OBJECT:
-				if (stack[top].key)
-				{
-					JsonPair *p = (JsonPair *)allocator.allocate(sizeof(JsonPair));
-					p->next = nullptr;
-					p->value = o;
-					p->key = stack[top].key;
-					stack[top].append(p);
-					stack[top].key = nullptr;
-				}
-				else
-				{
-					stack[top].key = o.toString();
-				}
-				break;
-			default:
+			if (!stack[top].key)
+			{
+				if (o.getTag() != JSON_TAG_STRING) return JSON_PARSE_UNQUOTED_KEY;
+				stack[top].key = o.toString();
 				continue;
+			}
+			JsonPair *p = (JsonPair *)allocator.allocate(sizeof(JsonPair));
+			p->value = o;
+			p->key = stack[top].key;
+			stack[top].key = nullptr;
+			stack[top].grow_the_tail((JsonElement *)p);
+			continue;
 		}
+
+		JsonElement *p = (JsonElement *)allocator.allocate(sizeof(JsonElement));
+		p->value = o;
+		stack[top].grow_the_tail(p);
 	}
 
-	*value = stack[0].node;
-
-	return JSON_PARSE_OK;
+	return JSON_PARSE_BREAKING_BAD;
 }
