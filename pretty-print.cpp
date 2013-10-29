@@ -63,7 +63,6 @@ void print_error(const char *filename, JsonParseStatus status, char *endptr, cha
 {
 	char *first = endptr;
 	while (first != source && *first != '\n') --first;
-	if (first != source) ++first;
 	char *last = endptr;
 	while (last != source + size && *last != '\n') ++last;
 	int line = 0;
@@ -76,7 +75,8 @@ void print_error(const char *filename, JsonParseStatus status, char *endptr, cha
 	}
 	int column = (int)(endptr - first);
 	fprintf(stderr, "%s:%d:%d: error %d\n", filename, line + 1, column + 1, (int)status);
-	for (char *i = first; i != last; ++i)
+	if (first != source) ++first;
+	for (char *i = first; i < last; ++i)
 	{
 		int c = *i;
 		switch (c)
