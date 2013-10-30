@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include "gason.h"
 #include "vjson/json.h"
+#include "sajson/include/sajson.h"
 
 double traverse_gason(JsonValue o)
 {
@@ -42,6 +43,35 @@ double traverse_vjson(json_value *value)
 			for (json_value *it = value->first_child; it; it = it->next_sibling)
 			{
 				x += traverse_vjson(it);
+			}
+			break;
+		default:
+			return 0;
+	}
+	return x;
+}
+
+double traverse_sajson(const sajson::value &v)
+{
+	double x = 0;
+	switch (v.get_type())
+	{
+		case sajson::TYPE_DOUBLE:
+			x += v.get_double_value();
+			break;
+		case sajson::TYPE_INTEGER:
+			x += v.get_integer_value();
+			break;
+		case sajson::TYPE_ARRAY:
+			for (size_t i = 0; i < v.get_length(); ++i)
+			{
+				x += traverse_sajson(v.get_array_element(i));
+			}
+			break;
+		case sajson::TYPE_OBJECT:
+			for (size_t i = 0; i < v.get_length(); ++i)
+			{
+				x += traverse_sajson(v.get_object_value(i));
 			}
 			break;
 		default:
@@ -122,6 +152,26 @@ int main(int argc, char **argv)
 			double x = traverse_vjson(root);
 			auto traverse_time = now() - t;
 			fprintf(stderr, "%.16s %f %10lluus %10lluus\n", "vjson", x, parse_time, traverse_time);
+
+			free(source);
+		}
+
+		// sajson
+		{
+			char *source = (char *)malloc(buffer_size);
+			memcpy(source, buffer, buffer_size);
+
+			t = now();
+			const sajson::document& document = parse(sajson::string(source, buffer_size));
+			auto parse_time = now() - t;
+			if (!document.is_valid())
+			{
+				fprintf(stderr, "error: sajson: %s\n", document.get_error_message().c_str());
+			}
+			t = now();
+			double x = traverse_sajson(document.get_root());
+			auto traverse_time = now() - t;
+			fprintf(stderr, "%.16s %f %10lluus %10lluus\n", "sajson", x, parse_time, traverse_time);
 
 			free(source);
 		}

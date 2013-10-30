@@ -29,5 +29,5 @@ endif()
 
 add_executable(gason-pp gason.cpp pretty-print.cpp)
 if(SHOOTOUT)
-	add_executable(parser-shootout gason.cpp parser-shootout.cpp vjson/block_allocator.cpp vjson/json.cpp)
+	add_executable(json-parser-shootout gason.cpp parser-shootout.cpp vjson/block_allocator.cpp vjson/json.cpp)
 endif()
