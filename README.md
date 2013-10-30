@@ -2,16 +2,22 @@
 
 gason is new version of [vjson](https://code.google.com/p/vjson) parser
 
+## Features
+
+* No dependencies (only standart C library)
+* Small codebase (~450 loc)
+* Small memory footprint (16-24B per value)
+
 ## Installation
 
-copy-paste!
-copy-paste!
-copy-paste!
-yeah!
+1. Download latest [gason.h](https://raw.github.com/vivkin/gason/master/gason.h) and [gason.cpp](https://raw.github.com/vivkin/gason/master/gason.cpp)
+2. Compile with C++11 support (`-std=c++11` flag for gcc/clang)
+3. ...
+4. PROFIT!
 
 ## Usage
 
-See @Installation
+copy-paste-and-pray!
 
 ## License
 
