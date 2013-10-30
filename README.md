@@ -1,10 +1,10 @@
 # gason
 
-gason is new version of [vjson](https://code.google.com/p/vjson) parser
+gason is new version of [vjson](https://code.google.com/p/vjson) parser. It's still very **fast** and have very **simple interface**. Completly new api, different internal representation and using new C++ standard features explains why library get new name.
 
 ## Features
 
-* No dependencies (only standart C library)
+* No dependencies
 * Small codebase (~450 loc)
 * Small memory footprint (16-24B per value)
 
