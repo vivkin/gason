@@ -132,6 +132,7 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 {
 	JsonList stack[JSON_STACK_SIZE];
 	int top = -1;
+	bool separator = true;
 	while (*str)
 	{
 		JsonValue o;
@@ -249,14 +250,18 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 				stack[top] = {JSON_TAG_OBJECT, JsonValue(JSON_TAG_OBJECT, nullptr), nullptr};
 				continue;
 			case ':':
-				if (top == -1 || stack[top].key == nullptr) return JSON_PARSE_UNEXPECTED_CHARACTER;
+				if (separator || stack[top].key == nullptr) return JSON_PARSE_UNEXPECTED_CHARACTER;
+				separator = true;
 				continue;
 			case ',':
-				if (top == -1 || stack[top].key != nullptr) return JSON_PARSE_UNEXPECTED_CHARACTER;
+				if (separator || stack[top].key != nullptr) return JSON_PARSE_UNEXPECTED_CHARACTER;
+				separator = true;
 				continue;
 			default:
 				return JSON_PARSE_UNEXPECTED_CHARACTER;
 		}
+
+		separator = false;
 
 		if (top == -1)
 		{
