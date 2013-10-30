@@ -249,7 +249,10 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 				stack[top] = {JSON_TAG_OBJECT, JsonValue(JSON_TAG_OBJECT, nullptr), nullptr};
 				continue;
 			case ':':
+				if (top == -1 || stack[top].key == nullptr) return JSON_PARSE_UNEXPECTED_CHARACTER;
+				continue;
 			case ',':
+				if (top == -1 || stack[top].key != nullptr) return JSON_PARSE_UNEXPECTED_CHARACTER;
 				continue;
 			default:
 				return JSON_PARSE_UNEXPECTED_CHARACTER;
