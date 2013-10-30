@@ -9,7 +9,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 foreach(lang C CXX)
-	set(CMAKE_${lang}_FLAGS "-Wall -Wextra -Wno-unused-parameter -march=corei7 -msse4")
+	set(CMAKE_${lang}_FLAGS "-Wall -Wextra -march=corei7 -msse4")
 	set(CMAKE_${lang}_FLAGS_DEBUG "-g")
 	set(CMAKE_${lang}_FLAGS_RELEASE "-O3 -DNDEBUG")
 	set(CMAKE_${lang}_FLAGS_MINSIZEREL "-Os -DNDEBUG")

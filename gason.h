@@ -143,7 +143,7 @@ struct JsonIterator
 };
 
 inline JsonIterator begin(JsonValue o) { return JsonIterator{o.toNode()}; }
-inline JsonIterator end(JsonValue o) { return JsonIterator{nullptr}; }
+inline JsonIterator end(JsonValue) { return JsonIterator{nullptr}; }
 
 enum JsonParseStatus
 {
