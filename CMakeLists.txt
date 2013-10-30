@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(gason)
 
 option(BUILD_X86 "Build for x86 instruction set" OFF)
+option(SHOOTOUT "Create parser-shootout" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Debug CACHE STRING "Default type of build - Debug" FORCE)
@@ -27,4 +28,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 add_executable(gason-pp gason.cpp pretty-print.cpp)
-add_executable(parser-shootout gason.cpp parser-shootout.cpp vjson/block_allocator.cpp vjson/json.cpp)
+if(SHOOTOUT)
+	add_executable(parser-shootout gason.cpp parser-shootout.cpp vjson/block_allocator.cpp vjson/json.cpp)
+endif()
