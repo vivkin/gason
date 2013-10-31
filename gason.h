@@ -116,25 +116,10 @@ struct JsonIterator
 {
 	JsonNode *p;
 
-	void operator++()
-	{
-		p = p->next;
-	}
-
-	bool operator!=(const JsonIterator &x) const
-	{
-		return p != x.p;
-	}
-
-	JsonNode *operator*() const
-	{
-		return p;
-	}
-
-	JsonNode *operator->() const
-	{
-		return p;
-	}
+	void operator++() { p = p->next; }
+	bool operator!=(const JsonIterator &x) const { return p != x.p; }
+	JsonNode *operator*() const { return p; }
+	JsonNode *operator->() const { return p; }
 };
 
 inline JsonIterator begin(JsonValue o) { return JsonIterator{o.toNode()}; }
