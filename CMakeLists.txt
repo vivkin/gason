@@ -29,5 +29,9 @@ endif()
 
 add_executable(gason-pp gason.cpp pretty-print.cpp)
 if(SHOOTOUT)
+	execute_process(
+		COMMAND hg clone https://code.google.com/p/vjson/
+		COMMAND git clone https://github.com/chadaustin/sajson.git
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 	add_executable(json-parser-shootout gason.cpp parser-shootout.cpp vjson/block_allocator.cpp vjson/json.cpp)
 endif()
