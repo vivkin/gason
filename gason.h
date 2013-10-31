@@ -64,11 +64,6 @@ struct JsonValue
 		data.f = x;
 	}
 
-	explicit operator bool() const
-	{
-		return data.i != JSON_VALUE_NULL;
-	}
-
 	bool isDouble() const
 	{
 		return (int64_t)data.i <= (int64_t)JSON_VALUE_NAN_MASK;
