@@ -6,7 +6,7 @@ gason is new version of [vjson](https://code.google.com/p/vjson) parser. It's st
 * Small codebase (~450 loc)
 * Small memory footprint (16-24B per value)
 
-gason is **destructive** parser, i.e. you **source buffer** will be **modified**! Strings stored as pointers to source buffer, where terminating `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects are represented as single linked list (without random access).
+gason is **destructive** parser, i.e. you **source buffer** will be **modified**! Strings stored as pointers to source buffer, where closing `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects are represented as single linked list (without random access).
 
 ## Installation
 1. Download latest [gason.h](https://raw.github.com/vivkin/gason/master/gason.h) and [gason.cpp](https://raw.github.com/vivkin/gason/master/gason.cpp)
@@ -76,7 +76,7 @@ printf("sum of all numbers: %g\n", sum);
 Arrays and Objects use the same `JsonNode` struct, but for arrays valid only `next` and `value` fields!
 
 ## Notes
-gason store values using NaN-boxing technique. By [IEEE-754](http://en.wikipedia.org/wiki/IEEE_floating_point) standard we have 2^52-1 variants for encoding double's [NaN](http://en.wikipedia.org/wiki/NaN). So let's use this for store value type and payload:
+gason stores values using NaN-boxing technique. By [IEEE-754](http://en.wikipedia.org/wiki/IEEE_floating_point) standard we have 2^52-1 variants for encoding double's [NaN](http://en.wikipedia.org/wiki/NaN). So let's use this to store value type and payload:
 ```
  sign
  |  exponent
