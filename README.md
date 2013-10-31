@@ -31,22 +31,65 @@ gason is **destructive** parser, i.e. you **source buffer** will be **modified**
 
 ## Usage
 
-Copy-paste-and-pray!
+### Parsing
 ```cpp
 #include "gason.h"
 ...
-char *source = get_useless_facebook_response(); // or read file, whatever, just do not forget terminate source string with 0
-...
+char *source = get_useless_facebook_response(); // or read file, whatever
+// do not forget terminate source string with 0
 char *endptr;
 JsonValue value;
 JsonAllocator allocator;
 JsonParseStatus status = json_parse(source, &endptr, &value, allocator);
 if (status != JSON_PARSE_OK)
 {
-	fprintf(stderr, "json parse error at %zd, status: %d", endptr - source, (int)status);
+	fprintf(stderr, "error at %zd, status: %d\n", endptr - source, (int)status);
 	exit(EXIT_FAILURE);
 }
 ```
+All **values** will become **invalid** while **allocator** will be **destroyed**. For print verbose error message see `print_error` function in [pretty-print.cpp](pretty-print.cpp).
+
+### Iteration
+```cpp
+double sum_and_print(JsonValue o)
+{
+	double sum = 0;
+	switch (o.getTag())
+	{
+		case JSON_TAG_NUMBER:
+			printf("%g\n", o.toNumber());
+			sum += o.toNumber();
+			break;
+		case JSON_TAG_BOOL:
+			printf("%s\n", o.toBool() ? "true" : "false");
+			break;
+		case JSON_TAG_STRING:
+			printf("\"%s\"\n", o.toString());
+			break;
+		case JSON_TAG_ARRAY:
+			for (auto i : o)
+			{
+				sum += sum_and_print(i->value);
+			}
+			break;
+		case JSON_TAG_OBJECT:
+			for (auto i : o)
+			{
+				printf("%s = ", i->key);
+				sum += sum_and_print(i->value);
+			}
+			break;
+		case JSON_TAG_NULL:
+			printf("null\n");
+			break;
+	}
+	return sum;
+}
+...
+double sum = sum_and_print(value);
+printf("sum of all numbers: %g\n", sum);
+```
+Arrays and Objects use the same `JsonNode` struct, but for arrays valid only `next` and `value` fields!
 
 ## License
 
