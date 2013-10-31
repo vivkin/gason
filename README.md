@@ -31,7 +31,7 @@ if (status != JSON_PARSE_OK)
 	exit(EXIT_FAILURE);
 }
 ```
-All **values** will become **invalid** while **allocator** will be **destroyed**. For print verbose error message see `print_error` function in [pretty-print.cpp](pretty-print.cpp).
+All **values** will become **invalid** when **allocator** will be **destroyed**. For print verbose error message see `print_error` function in [pretty-print.cpp](pretty-print.cpp).
 
 ### Iteration
 ```cpp
@@ -86,7 +86,7 @@ gason store values using NaN-boxing technique. By [IEEE-754](http://en.wikipedia
                  tag |
                      payload
 ```
-48 bits payload is enough for store any pointer on [x64](http://en.wikipedia.org/wiki/X86-64#Virtual_address_space_details).
+48 bits payload [enough](http://en.wikipedia.org/wiki/X86-64#Virtual_address_space_details) for store any pointer on x64.
 
 ## Performance
 I'm tired :(
