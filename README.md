@@ -6,7 +6,7 @@ gason is new version of [vjson](https://code.google.com/p/vjson) parser. It's st
 * Small codebase (~450 loc)
 * Small memory footprint (16-24B per value)
 
-gason is **destructive** parser, i.e. you **source buffer** will be **modified**! Strings stores as pointers in source buffer, where terminating `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects represents as linked list and not support random access.
+gason is **destructive** parser, i.e. you **source buffer** will be **modified**! Strings stored as pointers to source buffer, where terminating `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects are represented as single linked list (without random access).
 
 ## Installation
 1. Download latest [gason.h](https://raw.github.com/vivkin/gason/master/gason.h) and [gason.cpp](https://raw.github.com/vivkin/gason/master/gason.cpp)
