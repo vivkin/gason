@@ -1,10 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
+#ifndef _WIN32
 #ifndef NDEBUG
 #include <execinfo.h>
 #include <signal.h>
 #endif
 #include <sys/time.h>
+#endif
 #include "gason.h"
 
 #define INDENT 4
@@ -53,7 +55,7 @@ void print_json(JsonValue o, int indent = 0)
 			fprintf(stdout, "%*s}", indent, "");
 			break;
 		case JSON_TAG_NULL:
-			printf("null");
+			fprintf(stdout, "null");
 			break;
 		default:
 			fprintf(stderr, "error: unknown value tag %d\n", o.getTag());
@@ -107,14 +109,18 @@ void print_error(const char *filename, JsonParseStatus status, char *endptr, cha
 
 unsigned long long now()
 {
+#ifndef _WIN32
 	timeval tv;
 	gettimeofday(&tv, nullptr);
 	return tv.tv_sec * 1000000ull + tv.tv_usec;
+#else
+	return 0;
+#endif
 }
 
 int main(int argc, char **argv)
 {
-#ifndef NDEBUG
+#if !defined(_WIN32) && !defined(NDEBUG)
 	auto abort_handler = [](int)
 	{
 		void *callstack[16];
