@@ -31,7 +31,7 @@ if (status != JSON_PARSE_OK)
 	exit(EXIT_FAILURE);
 }
 ```
-All **values** will become **invalid** when **allocator** will be **destroyed**. For print verbose error message see `print_error` function in [pretty-print.cpp](pretty-print.cpp).
+All **values** will become **invalid** when **allocator** be **destroyed**. For print verbose error message see `print_error` function in [pretty-print.cpp](pretty-print.cpp).
 
 ### Iteration
 ```cpp
