@@ -182,16 +182,16 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 									if (!is_hex(*++str)) return *endptr = str, JSON_PARSE_BAD_STRING;
 									c = c * 16 + char2int(*str);
 								}
-								if (c <= 0x7F)
+								if (c < 0x80)
 								{
 									*s = c;
 								}
-								else if (c <= 0x7FF)
+								else if (c < 0x800)
 								{
 									*s++ = 0xC0 | (c >> 6);
 									*s = 0x80 | (c & 0x3F);
 								}
-								else if (c <= 0xFFFF)
+								else
 								{
 									*s++ = 0xE0 | (c >> 12);
 									*s++ = 0x80 | ((c >> 6) & 0x3F);
