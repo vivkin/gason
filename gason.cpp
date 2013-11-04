@@ -214,22 +214,25 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 			case 't':
 				for (const char *s = "rue"; *s; ++s, ++str)
 				{
-					if (*s != *str) return *endptr = str, JSON_PARSE_BAD_IDENTIFIER;
+					if (*s != *str) return JSON_PARSE_BAD_IDENTIFIER;
 				}
+				if (!is_delim(*str)) return JSON_PARSE_BAD_IDENTIFIER;
 				o = JsonValue(JSON_TAG_BOOL, (void *)true);
 				break;
 			case 'f':
 				for (const char *s = "alse"; *s; ++s, ++str)
 				{
-					if (*s != *str) return *endptr = str, JSON_PARSE_BAD_IDENTIFIER;
+					if (*s != *str) return JSON_PARSE_BAD_IDENTIFIER;
 				}
+				if (!is_delim(*str)) return JSON_PARSE_BAD_IDENTIFIER;
 				o = JsonValue(JSON_TAG_BOOL, (void *)false);
 				break;
 			case 'n':
 				for (const char *s = "ull"; *s; ++s, ++str)
 				{
-					if (*s != *str) return *endptr = str, JSON_PARSE_BAD_IDENTIFIER;
+					if (*s != *str) return JSON_PARSE_BAD_IDENTIFIER;
 				}
+				if (!is_delim(*str)) return JSON_PARSE_BAD_IDENTIFIER;
 				break;
 			case ']':
 				if (top == -1) return JSON_PARSE_STACK_UNDERFLOW;
