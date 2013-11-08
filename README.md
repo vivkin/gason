@@ -9,6 +9,7 @@ gason is new version of [vjson](https://code.google.com/p/vjson) parser. It's st
 gason is **not strict** parser:
 * Single number, string or identifier will be succesfully parsed
 * Trailing `,` before closing `]` or `}` is not an error
+* Source buffer can contain more than one value (first will be parsed and return pointer to the rest)
 
 gason is **destructive** parser, i.e. you **source buffer** will be **modified**! Strings stored as pointers to source buffer, where closing `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects are represented as single linked list (without random access).
 
@@ -94,12 +95,12 @@ gason stores values using NaN-boxing technique. By [IEEE-754](http://en.wikipedi
 48 bits payload [enough](http://en.wikipedia.org/wiki/X86-64#Virtual_address_space_details) for store any pointer on x64.
 
 ### Memory managment
-JsonAllocator allocates big blocks of memory and use pointer bumping inside theese blocks for smaller allocations. Size of block can be tuned by *JSON_ZONE_SIZE* constant (4KiB by default).
+JsonAllocator allocates big blocks of memory and use pointer bumping inside theese blocks for smaller allocations. Size of block can be tuned by *JSON_ZONE_SIZE* constant (default 4 KiB).
 
 ### Parser internals
 > [05.11.13, 2:52:33] Олег Литвин: о нихуя там свитч кейс на стеройдах!
 
-Internally in `json_parse` function nested arrays/objects stores in array of circulary linked list of `JsonNode`. Size of that array can be tuned by *JSON_STACK_SIZE* constant (32 by default).
+Internally in `json_parse` function nested arrays/objects stores in array of circulary linked list of `JsonNode`. Size of that array can be tuned by *JSON_STACK_SIZE* constant (default 32).
 
 ## Performance
 I'm tired :(
