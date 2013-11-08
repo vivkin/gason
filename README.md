@@ -6,11 +6,11 @@ gason is new version of [vjson](https://code.google.com/p/vjson) parser. It's st
 * Small codebase (~450 loc)
 * Small memory footprint (16-24B per value)
 
-gason is **destructive** parser, i.e. you **source buffer** will be **modified**! Strings stored as pointers to source buffer, where closing `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects are represented as single linked list (without random access).
-
 gason is **not strict** parser:
 * Single number, string or identifier will be succesfully parsed
 * Trailing `,` before closing `]` or `}` is not an error
+
+gason is **destructive** parser, i.e. you **source buffer** will be **modified**! Strings stored as pointers to source buffer, where closing `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects are represented as single linked list (without random access).
 
 ## Installation
 1. Download latest [gason.h](https://raw.github.com/vivkin/gason/master/gason.h) and [gason.cpp](https://raw.github.com/vivkin/gason/master/gason.cpp)
@@ -98,6 +98,7 @@ JsonAllocator allocates big blocks of memory and use pointer bumping inside thee
 
 ### Parser internals
 > [05.11.13, 2:52:33] Олег Литвин: о нихуя там свитч кейс на стеройдах!
+
 Internally in `json_parse` function nested arrays/objects stores in array of circulary linked list of `JsonNode`. Size of that array can be tuned by *JSON_STACK_SIZE* constant (32 by default).
 
 ## Performance
