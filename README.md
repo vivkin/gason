@@ -115,12 +115,19 @@ JsonAllocator allocates big blocks of memory and use pointer bumping inside thee
 Internally in `json_parse` function nested arrays/objects stored in array of circulary linked list of `JsonNode`. Size of that array can be tuned by *JSON_STACK_SIZE* constant (default 32).
 
 ## Performance
+
 For build parser shootout:
 1. `clone-enemy-parser.sh` (need mercurial, git, curl, nodejs)
 2. `cmake -DCMAKE_BUILD_TYPE=Release -DSHOOTOUT=ON`
 
-Test files from random repos on github. `big.json` - just big with big count escape sequences. `monster` - 3d model, lot of numbers. `data` - many objects.
-Intel Core i7 2.3 GHz, OSX 10.9, clang-500.2.79, compile flags `-Wall -Wextra -march=corei7 -msse4 -ferror-limit=4 -std=c++11 -fno-rtti -fno-exceptions -stdlib=libc++ -O3 -DNDEBUG`
+Test files from random repos on github:
+* `big.json` - just big with big count escape sequences
+* `monster` - 3d model, lot of numbers
+* `data` - many objects
+
+Intel Core i7 2.3 GHz, OSX 10.9, clang-500.2.79
+Compile flags: `-Wall -Wextra -march=corei7 -msse4 -ferror-limit=4 -std=c++11 -fno-rtti -fno-exceptions -stdlib=libc++ -O3 -DNDEBUG`
+
 First column - parse time in microseconds, second - traverse and sum all numbers.
 ```
 shootout/big.json: length 6072200
