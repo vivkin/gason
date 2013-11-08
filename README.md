@@ -7,9 +7,9 @@ gason is new version of [vjson](https://code.google.com/p/vjson) parser. It's st
 * Small memory footprint (16-24B per value)
 
 gason is **not strict** parser:
+* Source buffer can contain more than one value (first will be parsed; pointer to the rest returns)
 * Single number, string or identifier will be succesfully parsed
 * Trailing `,` before closing `]` or `}` is not an error
-* Source buffer can contain more than one value (first will be parsed and return pointer to the rest)
 
 gason is **destructive** parser, i.e. you **source buffer** will be **modified**! Strings stored as pointers to source buffer, where closing `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects are represented as single linked list (without random access).
 
@@ -100,7 +100,7 @@ JsonAllocator allocates big blocks of memory and use pointer bumping inside thee
 ### Parser internals
 > [05.11.13, 2:52:33] Олег Литвин: о нихуя там свитч кейс на стеройдах!
 
-Internally in `json_parse` function nested arrays/objects stores in array of circulary linked list of `JsonNode`. Size of that array can be tuned by *JSON_STACK_SIZE* constant (default 32).
+Internally in `json_parse` function nested arrays/objects stored in array of circulary linked list of `JsonNode`. Size of that array can be tuned by *JSON_STACK_SIZE* constant (default 32).
 
 ## Performance
 I'm tired :(
