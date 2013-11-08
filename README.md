@@ -121,10 +121,10 @@ For build parser shootout:
 1. `clone-enemy-parser.sh` (need mercurial, git, curl, nodejs)
 2. `cmake -DCMAKE_BUILD_TYPE=Release -DSHOOTOUT=ON`
 
-Test files from random repos on github:
+Test files downloads from random repos on github:
 * `big.json` - just big with big count escape sequences
-* `monster` - 3d model, lot of numbers
-* `data` - many objects
+* `monster.json` - 3d model, lot of numbers
+* `data.json` - many objects
 
 Intel Core i7 2.3 GHz, OSX 10.9, clang-500.2.79
 Compile flags: `-Wall -Wextra -march=corei7 -msse4 -ferror-limit=4 -std=c++11 -fno-rtti -fno-exceptions -stdlib=libc++ -O3 -DNDEBUG`
