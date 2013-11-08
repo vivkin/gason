@@ -135,16 +135,16 @@ int main()
 	char *endptr;
 	JsonValue value;
 	JsonAllocator allocator;
-	size_t passed = 0;
-	size_t count = 0;
+	int passed = 0;
+	int count = 0;
 	for (auto *s : SUITE)
 	{
 		char *source = strdup(s);
 		JsonParseStatus status = json_parse(source, &endptr, &value, allocator);
 		if (status != JSON_PARSE_OK)
 		{
-			size_t pos = endptr - source;
-			fprintf(stderr, "test-suite%zd:%zd: error: %d, %.*s<--- there\n", count, pos, (int)status, (int)pos, s);
+			int error_pos = endptr - source + 1;
+			fprintf(stderr, "test-suite%d:%d: error: %d, %.*s<--- there\n", count, error_pos, (int)status, error_pos, s);
 		}
 		else
 		{
@@ -153,7 +153,7 @@ int main()
 		free(source);
 		++count;
 	}
-	fprintf(stderr, "%zd/%zd\n", passed, count);
+	fprintf(stderr, "%d/%d\n", passed, count);
 
 	return 0;
 }
