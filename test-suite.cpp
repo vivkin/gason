@@ -9,42 +9,41 @@
 
 const char *SUITE[] =
 {
-R"raw("A JSON payload should be an object or array, not a string.")raw"
-R"raw(["Unclosed array")raw",
-R"raw({unquoted_key: "keys must be quoted"})raw",
-R"raw(["extra comma",])raw",
-R"raw(["double extra comma",,])raw",
-R"raw([   , "<-- missing value"])raw",
-R"raw(["Comma after the close"],)raw",
-R"raw(["Extra close"]])raw",
-R"raw({"Extra comma": true,})raw",
-R"raw({"Extra value after close": true} "misplaced quoted value")raw",
-R"raw({"Illegal expression": 1 + 2})raw",
-R"raw({"Illegal invocation": alert()})raw",
-R"raw({"Numbers cannot have leading zeroes": 013})raw",
-R"raw({"Numbers cannot be hex": 0x14})raw",
-R"raw(["Illegal backslash escape: \x15"])raw",
-R"raw([\naked])raw",
-R"raw(["Illegal backslash escape: \017"])raw",
-R"raw([[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]])raw",
-R"raw({"Missing colon" null})raw",
-R"raw({"Double colon":: null})raw",
-R"raw({"Comma instead of colon", null})raw",
-R"raw(["Colon instead of comma": false])raw",
-R"raw(["Bad value", truth])raw",
-R"raw(['single quote'])raw",
-R"raw(["	tab	character	in	string	"])raw",
-R"raw(["tab\   character\   in\  string\  "])raw",
-R"raw(["line
-eak"])raw",
-R"raw(["line\
-eak"])raw",
-R"raw([0e])raw",
-R"raw([0e+])raw",
-R"raw([0e+-1])raw",
-R"raw({"Comma instead if closing brace": true,)raw",
-R"raw(["mismatch"})raw",
-R"raw(
+R"*("A JSON payload should be an object or array, not a string.")*",
+R"*(["Unclosed array")*",
+R"*({unquoted_key: "keys must be quoted"})*",
+R"*(["extra comma",])*",
+R"*(["double extra comma",,])*",
+R"*([   , "<-- missing value"])*",
+R"*(["Comma after the close"],)*",
+R"*(["Extra close"]])*",
+R"*({"Extra comma": true,})*",
+R"*({"Extra value after close": true} "misplaced quoted value")*",
+R"*({"Illegal expression": 1 + 2})*",
+R"*({"Illegal invocation": alert()})*",
+R"*({"Numbers cannot have leading zeroes": 013})*",
+R"*({"Numbers cannot be hex": 0x14})*",
+R"*(["Illegal backslash escape: \x15"])*",
+R"*([\naked])*",
+R"*(["Illegal backslash escape: \017"])*",
+R"*([[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]])*",
+R"*({"Missing colon" null})*",
+R"*({"Double colon":: null})*",
+R"*({"Comma instead of colon", null})*",
+R"*(["Colon instead of comma": false])*",
+R"*(["Bad value", truth])*",
+R"*(['single quote'])*",
+R"*(["	tab	character	in	string	"])*",
+R"*(["line
+break"])*",
+R"*(["line\
+break"])*",
+R"*([0e])*",
+R"*([0e+])*",
+R"*([0e+-1])*",
+R"*({"Comma instead if closing brace": true,)*",
+R"*(["mismatch"})*",
+R"*(
 [
     "JSON Test Pattern pass1",
     {"object with 1 member":["array with 1 element"]},
@@ -102,16 +101,16 @@ R"raw(
 0.1e1,
 1e-1,
 1e00,2e+00,2e-00
-,"rosebud"])raw",
-R"raw([[[[[[[[[[[[[[[[[[["Not too deep"]]]]]]]]]]]]]]]]]]])raw",
-R"raw({
+,"rosebud"])*",
+R"*([[[[[[[[[[[[[[[[[[["Not too deep"]]]]]]]]]]]]]]]]]]])*",
+R"*({
     "JSON Test Pattern pass3": {
         "The outermost value": "must be an object or array.",
         "In this test": "It is an object."
     }
 }
-)raw",
-R"raw([1, 2, "хУй", [[0.5], 7.11, 13.19e+1], "ba\u0020r", [ [ ] ], -0, -.666, [true, null], {"WAT?!": false}])raw"
+)*",
+R"*([1, 2, "хУй", [[0.5], 7.11, 13.19e+1], "ba\u0020r", [ [ ] ], -0, -.666, [true, null], {"WAT?!": false}])*"
 };
 
 int main()
