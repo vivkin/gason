@@ -114,50 +114,6 @@ u8R"raw({
 u8R"raw([1, 2, "хУй", [[0.5], 7.11, 13.19e+1], "ba\u0020r", [ [ ] ], -0, -.666, [true, null], {"WAT?!": false}])raw"
 };
 
-void print_error(const char *filename, JsonParseStatus status, char *endptr, char *source, size_t size)
-{
-	const char *status2str[] = {
-		"JSON_PARSE_OK",
-		"JSON_PARSE_BAD_NUMBER",
-		"JSON_PARSE_BAD_STRING",
-		"JSON_PARSE_BAD_IDENTIFIER",
-		"JSON_PARSE_STACK_OVERFLOW",
-		"JSON_PARSE_STACK_UNDERFLOW",
-		"JSON_PARSE_MISMATCH_BRACKET",
-		"JSON_PARSE_UNEXPECTED_CHARACTER",
-		"JSON_PARSE_UNQUOTED_KEY",
-		"JSON_PARSE_BREAKING_BAD"
-	};
-	char *s = endptr;
-	while (s != source && *s != '\n') --s;
-	if (s != endptr && s != source) ++s;
-	int line = 0;
-	for (char *i = s; i != source; --i)
-	{
-		if (*i == '\n')
-		{
-			++line;
-		}
-	}
-	int column = (int)(endptr - s);
-	fprintf(stderr, "%s:%d:%d: error %s\n", filename, line + 1, column + 1, status2str[status]);
-	while (s != source + size && *s != '\n')
-	{
-		int c = *s++;
-		switch (c)
-		{
-			case '\b': fprintf(stderr, "\\b"); column += 1; break;
-			case '\f': fprintf(stderr, "\\f"); column += 1; break;
-			case '\n': fprintf(stderr, "\\n"); column += 1; break;
-			case '\r': fprintf(stderr, "\\r"); column += 1; break;
-			case '\t': fprintf(stderr, "%*s", 4, ""); column += 3; break;
-			case 0: fprintf(stderr, "\""); break;
-			default: fprintf(stderr, "%c", c);
-		}
-	}
-	fprintf(stderr, "\n%*s\n", column + 1, "^");
-}
-
 int main()
 {
 #if !defined(_WIN32) && !defined(NDEBUG)
@@ -180,22 +136,24 @@ int main()
 	JsonValue value;
 	JsonAllocator allocator;
 	size_t passed = 0;
+	size_t count = 0;
 	for (auto *s : SUITE)
 	{
-		size_t length = strlen(s);
 		char *source = strdup(s);
 		JsonParseStatus status = json_parse(source, &endptr, &value, allocator);
 		if (status != JSON_PARSE_OK)
 		{
-			print_error("test-suite", status, endptr, source, length);
+			size_t pos = endptr - source;
+			fprintf(stderr, "test-suite%zd:%zd: error: %d, %.*s<--- there\n", count, pos, (int)status, (int)pos, s);
 		}
 		else
 		{
 			++passed;
 		}
 		free(source);
+		++count;
 	}
-	fprintf(stderr, "%zd/%zd\n", passed, sizeof(SUITE) / sizeof(SUITE[0]));
+	fprintf(stderr, "%zd/%zd\n", passed, count);
 
 	return 0;
 }
