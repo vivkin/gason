@@ -9,42 +9,42 @@
 
 const char *SUITE[] =
 {
-u8R"raw("A JSON payload should be an object or array, not a string.")raw",
-u8R"raw(["Unclosed array")raw",
-u8R"raw({unquoted_key: "keys must be quoted"})raw",
-u8R"raw(["extra comma",])raw",
-u8R"raw(["double extra comma",,])raw",
-u8R"raw([   , "<-- missing value"])raw",
-u8R"raw(["Comma after the close"],)raw",
-u8R"raw(["Extra close"]])raw",
-u8R"raw({"Extra comma": true,})raw",
-u8R"raw({"Extra value after close": true} "misplaced quoted value")raw",
-u8R"raw({"Illegal expression": 1 + 2})raw",
-u8R"raw({"Illegal invocation": alert()})raw",
-u8R"raw({"Numbers cannot have leading zeroes": 013})raw",
-u8R"raw({"Numbers cannot be hex": 0x14})raw",
-u8R"raw(["Illegal backslash escape: \x15"])raw",
-u8R"raw([\naked])raw",
-u8R"raw(["Illegal backslash escape: \017"])raw",
-u8R"raw([[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]])raw",
-u8R"raw({"Missing colon" null})raw",
-u8R"raw({"Double colon":: null})raw",
-u8R"raw({"Comma instead of colon", null})raw",
-u8R"raw(["Colon instead of comma": false])raw",
-u8R"raw(["Bad value", truth])raw",
-u8R"raw(['single quote'])raw",
-u8R"raw(["	tab	character	in	string	"])raw",
-u8R"raw(["tab\   character\   in\  string\  "])raw",
-u8R"raw(["line
-break"])raw",
-u8R"raw(["line\
-break"])raw",
-u8R"raw([0e])raw",
-u8R"raw([0e+])raw",
-u8R"raw([0e+-1])raw",
-u8R"raw({"Comma instead if closing brace": true,)raw",
-u8R"raw(["mismatch"})raw",
-u8R"raw(
+R"raw("A JSON payload should be an object or array, not a string.")raw"
+R"raw(["Unclosed array")raw",
+R"raw({unquoted_key: "keys must be quoted"})raw",
+R"raw(["extra comma",])raw",
+R"raw(["double extra comma",,])raw",
+R"raw([   , "<-- missing value"])raw",
+R"raw(["Comma after the close"],)raw",
+R"raw(["Extra close"]])raw",
+R"raw({"Extra comma": true,})raw",
+R"raw({"Extra value after close": true} "misplaced quoted value")raw",
+R"raw({"Illegal expression": 1 + 2})raw",
+R"raw({"Illegal invocation": alert()})raw",
+R"raw({"Numbers cannot have leading zeroes": 013})raw",
+R"raw({"Numbers cannot be hex": 0x14})raw",
+R"raw(["Illegal backslash escape: \x15"])raw",
+R"raw([\naked])raw",
+R"raw(["Illegal backslash escape: \017"])raw",
+R"raw([[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]])raw",
+R"raw({"Missing colon" null})raw",
+R"raw({"Double colon":: null})raw",
+R"raw({"Comma instead of colon", null})raw",
+R"raw(["Colon instead of comma": false])raw",
+R"raw(["Bad value", truth])raw",
+R"raw(['single quote'])raw",
+R"raw(["	tab	character	in	string	"])raw",
+R"raw(["tab\   character\   in\  string\  "])raw",
+R"raw(["line
+eak"])raw",
+R"raw(["line\
+eak"])raw",
+R"raw([0e])raw",
+R"raw([0e+])raw",
+R"raw([0e+-1])raw",
+R"raw({"Comma instead if closing brace": true,)raw",
+R"raw(["mismatch"})raw",
+R"raw(
 [
     "JSON Test Pattern pass1",
     {"object with 1 member":["array with 1 element"]},
@@ -103,15 +103,15 @@ u8R"raw(
 1e-1,
 1e00,2e+00,2e-00
 ,"rosebud"])raw",
-u8R"raw([[[[[[[[[[[[[[[[[[["Not too deep"]]]]]]]]]]]]]]]]]]])raw",
-u8R"raw({
+R"raw([[[[[[[[[[[[[[[[[[["Not too deep"]]]]]]]]]]]]]]]]]]])raw",
+R"raw({
     "JSON Test Pattern pass3": {
         "The outermost value": "must be an object or array.",
         "In this test": "It is an object."
     }
 }
 )raw",
-u8R"raw([1, 2, "хУй", [[0.5], 7.11, 13.19e+1], "ba\u0020r", [ [ ] ], -0, -.666, [true, null], {"WAT?!": false}])raw"
+R"raw([1, 2, "хУй", [[0.5], 7.11, 13.19e+1], "ba\u0020r", [ [ ] ], -0, -.666, [true, null], {"WAT?!": false}])raw"
 };
 
 int main()
