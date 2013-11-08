@@ -289,7 +289,7 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 			continue;
 		}
 
-		JsonNode *p = (JsonNode *)allocator.allocate(sizeof(JsonNode) - sizeof(JsonNode::key));
+		JsonNode *p = (JsonNode *)allocator.allocate(sizeof(JsonNode)-sizeof(char*));
 		p->value = o;
 		stack[top].grow_the_tail(p);
 	}
