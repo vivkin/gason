@@ -5,6 +5,7 @@
 #include "gason.h"
 #include "vjson/json.h"
 #include "sajson/include/sajson.h"
+#include "stix-json/JsonParser.h"
 
 double traverse_gason(JsonValue o)
 {
@@ -80,6 +81,32 @@ double traverse_sajson(const sajson::value &v)
 	return x;
 }
 
+double traverse_stixjson(const stix::JsonValue &v)
+{
+	double x = 0;
+	switch (v.GetType())
+	{
+		case JSMN_PRIMITIVE:
+			x += v.AsNumber();
+			break;
+		case JSMN_ARRAY:
+			for (stix::u32 i = 0; i < v.GetElementsCount(); ++i)
+			{
+				x += traverse_stixjson(v[i]);
+			}
+			break;
+		case JSMN_OBJECT:
+			for (stix::u32 i = 0; i < v.GetElementsCount(); ++i)
+			{
+				x += traverse_stixjson(v[i].GetValue());
+			}
+			break;
+		default:
+			return 0;
+	}
+	return x;
+}
+
 unsigned long long now()
 {
 	timeval tv;
@@ -111,8 +138,7 @@ int main(int argc, char **argv)
 
 		// gason
 		{
-			char *source = (char *)malloc(buffer_size);
-			memcpy(source, buffer, buffer_size);
+			char *source = strdup(buffer);
 
 			char *endptr;
 			JsonValue value;
@@ -127,18 +153,17 @@ int main(int argc, char **argv)
 			t = now();
 			double x = traverse_gason(value);
 			auto traverse_time = now() - t;
-			fprintf(stderr, "%.16s %f %10lluus %10lluus\n", "gason", x, parse_time, traverse_time);
+			fprintf(stderr, "%10s %f %10lluus %10lluus\n", "gason", x, parse_time, traverse_time);
 
 			free(source);
 		}
 
 		// vjson
 		{
-			char *source = (char *)malloc(buffer_size);
-			memcpy(source, buffer, buffer_size);
+			char *source = strdup(buffer);
 
 			char *errorPos = 0;
-			char *errorDesc = 0;
+			const char *errorDesc = 0;
 			int errorLine = 0;
 			block_allocator allocator(4096);
 			t = now();
@@ -151,15 +176,14 @@ int main(int argc, char **argv)
 			t = now();
 			double x = traverse_vjson(root);
 			auto traverse_time = now() - t;
-			fprintf(stderr, "%.16s %f %10lluus %10lluus\n", "vjson", x, parse_time, traverse_time);
+			fprintf(stderr, "%10s %f %10lluus %10lluus\n", "vjson", x, parse_time, traverse_time);
 
 			free(source);
 		}
 
 		// sajson
 		{
-			char *source = (char *)malloc(buffer_size);
-			memcpy(source, buffer, buffer_size);
+			char *source = strdup(buffer);
 
 			t = now();
 			const sajson::document& document = parse(sajson::string(source, buffer_size));
@@ -171,7 +195,27 @@ int main(int argc, char **argv)
 			t = now();
 			double x = traverse_sajson(document.get_root());
 			auto traverse_time = now() - t;
-			fprintf(stderr, "%.16s %f %10lluus %10lluus\n", "sajson", x, parse_time, traverse_time);
+			fprintf(stderr, "%10s %f %10lluus %10lluus\n", "sajson", x, parse_time, traverse_time);
+
+			free(source);
+		}
+
+		// stix-json
+		{
+			char *source = strdup(buffer);
+
+			stix::JsonParser parser;
+			t = now();
+			int status = parser.ParseJsonString(source);
+			auto parse_time = now() - t;
+			if (status != JSMN_SUCCESS)
+			{
+				fprintf(stderr, "error: stix-json: %d\n", status);
+			}
+			t = now();
+			double x = traverse_stixjson(parser.GetRoot());
+			auto traverse_time = now() - t;
+			fprintf(stderr, "%10s %f %10lluus %10lluus\n", "stix-json", x, parse_time, traverse_time);
 
 			free(source);
 		}

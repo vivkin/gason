@@ -115,7 +115,30 @@ JsonAllocator allocates big blocks of memory and use pointer bumping inside thee
 Internally in `json_parse` function nested arrays/objects stored in array of circulary linked list of `JsonNode`. Size of that array can be tuned by *JSON_STACK_SIZE* constant (default 32).
 
 ## Performance
-I'm tired :(
+For build parser shootout:
+1. `clone-enemy-parser.sh` (need mercurial, git, curl, nodejs)
+2. `cmake -DCMAKE_BUILD_TYPE=Release -DSHOOTOUT=ON`
+
+Test files from random repos on github. `big.json` - just big with big count escape sequences. `monster` - 3d model, lot of numbers. `data` - many objects.
+Intel Core i7 2.3 GHz, OSX 10.9, clang-500.2.79, compile flags `-Wall -Wextra -march=corei7 -msse4 -ferror-limit=4 -std=c++11 -fno-rtti -fno-exceptions -stdlib=libc++ -O3 -DNDEBUG`
+First column - parse time in microseconds, second - traverse and sum all numbers.
+```
+shootout/big.json: length 6072200
+     gason 5520251617769.000000      20511us         *94us*
+     vjson 5520251617769.000000      *20378us*        101us
+    sajson 5520251617769.000000      23152us        145us
+ stix-json 5520251617769.000000      21367us      55189us
+shootout/data.json: length 17333
+     gason 3754.333493         *60us*          *5us*
+     vjson 3754.333471         61us          7us
+    sajson 3754.333493         92us         11us
+ stix-json 3754.333493         89us         64us
+shootout/monster.json: length 196473
+     gason 34474757.667613       *1176us*        *162us*
+     vjson 34474757.667621       2081us        191us
+    sajson 34474757.667613       1581us        232us
+ stix-json 34474757.667613       2226us     160254us
+```
 
 ## License
 Distributed under the MIT license. Copyright (c) 2013, Ivan Vashchaev

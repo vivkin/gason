@@ -29,11 +29,12 @@ endif()
 
 add_executable(gason-pp gason.cpp pretty-print.cpp)
 add_executable(gason-test-suite gason.cpp test-suite.cpp)
-
 if(SHOOTOUT)
-	execute_process(
-		COMMAND hg clone https://code.google.com/p/vjson/
-		COMMAND git clone https://github.com/chadaustin/sajson.git
-		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-	add_executable(json-parser-shootout gason.cpp parser-shootout.cpp vjson/block_allocator.cpp vjson/json.cpp)
+	add_executable(json-parser-shootout parser-shootout.cpp
+		gason.cpp
+		vjson/block_allocator.cpp
+		vjson/json.cpp
+		stix-json/jsmn/jsmn.c
+		stix-json/JsonParser.cpp)
+	set_target_properties(json-parser-shootout PROPERTIES INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/stix-json)
 endif()
