@@ -76,6 +76,7 @@ printf("sum of all numbers: %g\n", sum);
 Arrays and Objects use the same `JsonNode` struct, but for arrays valid only `next` and `value` fields!
 
 ## Notes
+### NaN-boxing
 gason stores values using NaN-boxing technique. By [IEEE-754](http://en.wikipedia.org/wiki/IEEE_floating_point) standard we have 2^52-1 variants for encoding double's [NaN](http://en.wikipedia.org/wiki/NaN). So let's use this to store value type and payload:
 ```
  sign
@@ -87,6 +88,12 @@ gason stores values using NaN-boxing technique. By [IEEE-754](http://en.wikipedi
                      payload
 ```
 48 bits payload [enough](http://en.wikipedia.org/wiki/X86-64#Virtual_address_space_details) for store any pointer on x64.
+
+### Memory managment
+JsonAllocator allocates big blocks of memory and use pointer bumping inside theese blocks for smaller allocations. Size of block can be tuned by [JSON_ZONE_SIZE](https://github.com/vivkin/gason/blob/master/gason.h#L6) constant (4KiB by default).
+
+### Parser internals
+> [05.11.13, 2:52:33] Олег Литвин: о нихуя там свитч кейс на стеройдах!
 
 ## Performance
 I'm tired :(
