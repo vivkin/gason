@@ -28,6 +28,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 add_executable(gason-pp gason.cpp pretty-print.cpp)
+add_executable(gason-test-suite gason.cpp test-suite.cpp)
+
 if(SHOOTOUT)
 	execute_process(
 		COMMAND hg clone https://code.google.com/p/vjson/
