@@ -117,6 +117,7 @@ Internally in `json_parse` function nested arrays/objects stored in array of cir
 ## Performance
 
 For build parser shootout:
+
 1. `clone-enemy-parser.sh` (need mercurial, git, curl, nodejs)
 2. `cmake -DCMAKE_BUILD_TYPE=Release -DSHOOTOUT=ON`
 
