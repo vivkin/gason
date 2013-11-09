@@ -48,12 +48,7 @@ static double str2float(const char *str, char **endptr)
 		int exponent = 0;
 		while (is_dec(*str)) exponent = (exponent * 10) + (*str++ - '0');
 		double power = 1;
-		while (exponent)
-		{
-			if (exponent & 1) power *= base;
-			exponent >>= 1;
-			base *= base;
-		}
+		for (; exponent; exponent >>= 1, base *= base) if (exponent & 1) power *= base;
 		result *= power;
 	}
 	*endptr = (char *)str;
