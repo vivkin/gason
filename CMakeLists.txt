@@ -36,5 +36,4 @@ if(SHOOTOUT)
 		vjson/json.cpp
 		stix-json/jsmn/jsmn.c
 		stix-json/JsonParser.cpp)
-	set_target_properties(json-parser-shootout PROPERTIES INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/stix-json)
 endif()
