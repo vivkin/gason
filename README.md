@@ -126,10 +126,9 @@ Test files downloads from random repos on github:
 * `monster.json` - 3d model, lot of numbers
 * `data.json` - many objects
 
-Intel Core i7 2.3 GHz, OSX 10.9, clang-500.2.79, compilation flags:
-`-march=corei7 -msse4 -std=c++11 -fno-rtti -fno-exceptions -stdlib=libc++ -O3 -DNDEBUG`
-
 First column - parse time in microseconds, second - traverse and sum all numbers.
+
+Intel Core i7 2.3 GHz, OSX 10.9, clang-500.2.79:
 ```
 shootout/big.json: length 6072200
      gason 5520251617769.000000      20511us         *94us*
@@ -146,6 +145,24 @@ shootout/monster.json: length 196473
      vjson 34474757.667621       2081us        191us
     sajson 34474757.667613       1581us        232us
  stix-json 34474757.667613       2226us     160254us
+```
+Samsung Galaxy Note II (GT-N7100), Android 4.1.1, gcc 4.8.2:
+```
+I/ruberoid(28228): /sdcard/Download/shootout/big.json: length 6072200
+I/ruberoid(28228):      gason 5520251617769.000000      67839us        569us
+I/ruberoid(28228):      vjson 5520251617769.000000      61227us       1013us
+I/ruberoid(28228):     sajson 5520251617769.000000      80071us       1818us
+I/ruberoid(28228):  stix-json 5520251617769.000000     100503us     185185us
+I/ruberoid(28228): /sdcard/Download/shootout/data.json: length 17333
+I/ruberoid(28228):      gason 3754.333493        326us         31us
+I/ruberoid(28228):      vjson 3754.333471        338us         53us
+I/ruberoid(28228):     sajson 3754.333493        333us         57us
+I/ruberoid(28228):  stix-json 3754.333493        517us        336us
+I/ruberoid(28228): /sdcard/Download/shootout/monster.json: length 196473
+I/ruberoid(28228):      gason 34474757.667613       7683us       1331us
+I/ruberoid(28228):      vjson 34474757.667621      10381us       2205us
+I/ruberoid(28228):     sajson 34474757.667613       6742us       2127us
+I/ruberoid(28228):  stix-json 34474757.667613      12546us    1172294us
 ```
 
 ## License
