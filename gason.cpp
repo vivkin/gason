@@ -30,8 +30,7 @@ inline int char2int(char c)
 
 static double str2float(const char *str, char **endptr)
 {
-	double sign = 1;
-	if (is_sign(*str)) sign = ',' - *str++;
+	double sign = is_sign(*str) && *str++ == '-' ? -1 : 1;
 	double result = 0;
 	while (is_dec(*str)) result = (result * 10) + (*str++ - '0');
 	if (*str == '.')
@@ -43,8 +42,7 @@ static double str2float(const char *str, char **endptr)
 	if (*str == 'e' || *str == 'E')
 	{
 		++str;
-		double base = 10;
-		if (is_sign(*str) && *str++ == '-') base = 0.1;
+		double base = is_sign(*str) && *str++ == '-' ? 0.1 : 10;
 		int exponent = 0;
 		while (is_dec(*str)) exponent = (exponent * 10) + (*str++ - '0');
 		double power = 1;
