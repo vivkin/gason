@@ -126,8 +126,8 @@ Test files downloads from random repos on github:
 * `monster.json` - 3d model, lot of numbers
 * `data.json` - many objects
 
-Intel Core i7 2.3 GHz, OSX 10.9, clang-500.2.79
-Compile flags: `-Wall -Wextra -march=corei7 -msse4 -ferror-limit=4 -std=c++11 -fno-rtti -fno-exceptions -stdlib=libc++ -O3 -DNDEBUG`
+Intel Core i7 2.3 GHz, OSX 10.9, clang-500.2.79, compilation flags:
+`-march=corei7 -msse4 -std=c++11 -fno-rtti -fno-exceptions -stdlib=libc++ -O3 -DNDEBUG`
 
 First column - parse time in microseconds, second - traverse and sum all numbers.
 ```
