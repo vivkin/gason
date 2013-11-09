@@ -5,6 +5,12 @@
 #include <execinfo.h>
 #include <signal.h>
 #endif
+#ifdef ANDROID
+#include <android/log.h>
+#define LOG(...) __android_log_print(ANDROID_LOG_INFO, "R2D2", __VA_ARGS__)
+#else
+#define LOG(...) fprintf(stderr, __VA_ARGS__)
+#endif
 #include "gason.h"
 
 const char *SUITE[] =
@@ -123,7 +129,7 @@ int main()
 		char **names = backtrace_symbols(callstack, size);
 		for (int i = 0; i < size; ++i)
 		{
-			fprintf(stderr, "%s\n", names[i]);
+			LOG("%s\n", names[i]);
 		}
 		free(names);
 		exit(EXIT_FAILURE);
@@ -143,7 +149,7 @@ int main()
 		if (status != JSON_PARSE_OK)
 		{
 			int error_pos = endptr - source + 1;
-			fprintf(stderr, "test-suite%d:%d: error: %d, %.*s<--- there\n", count, error_pos, (int)status, error_pos, s);
+			LOG("test-suite%d:%d: error: %d, %.*s<--- there\n", count, error_pos, (int)status, error_pos, s);
 		}
 		else
 		{
@@ -152,7 +158,7 @@ int main()
 		free(source);
 		++count;
 	}
-	fprintf(stderr, "%d/%d\n", passed, count);
+	LOG("%d/%d\n", passed, count);
 
 	return 0;
 }

@@ -2,6 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
+#ifdef ANDROID
+#include <android/log.h>
+#define LOG(...) __android_log_print(ANDROID_LOG_INFO, "R2D2", __VA_ARGS__)
+#else
+#define LOG(...) fprintf(stderr, __VA_ARGS__)
+#endif
 #include "gason.h"
 #include "vjson/json.h"
 #include "sajson/include/sajson.h"
@@ -122,7 +128,7 @@ int main(int argc, char **argv)
 		FILE *fp = fopen(filename, "rb");
 		if (!fp)
 		{
-			fprintf(stderr, "error: %s: no such file\nusage: json-pretty-print [fileanme]\n", filename);
+			LOG("error: %s: no such file\nusage: json-pretty-print [fileanme]\n", filename);
 			exit(EXIT_FAILURE);
 		}
 		fseek(fp, 0, SEEK_END);
@@ -133,7 +139,7 @@ int main(int argc, char **argv)
 		fclose(fp);
 		buffer[buffer_size - 1] = 0;
 
-		fprintf(stderr, "%s: length %zd\n", filename, buffer_size);
+		LOG("%s: length %zd\n", filename, buffer_size);
 		unsigned long long t;
 
 		// gason
@@ -148,12 +154,12 @@ int main(int argc, char **argv)
 			auto parse_time = now() - t;
 			if (status != JSON_PARSE_OK)
 			{
-				fprintf(stderr, "error: gason: %d\n", (int)status);
+				LOG("error: gason: %d\n", (int)status);
 			}
 			t = now();
 			double x = traverse_gason(value);
 			auto traverse_time = now() - t;
-			fprintf(stderr, "%10s %f %10lluus %10lluus\n", "gason", x, parse_time, traverse_time);
+			LOG("%10s %f %10lluus %10lluus\n", "gason", x, parse_time, traverse_time);
 
 			free(source);
 		}
@@ -171,12 +177,12 @@ int main(int argc, char **argv)
 			auto parse_time = now() - t;
 			if (!root)
 			{
-				fprintf(stderr, "error: vjson: %s\n", errorDesc);
+				LOG("error: vjson: %s\n", errorDesc);
 			}
 			t = now();
 			double x = traverse_vjson(root);
 			auto traverse_time = now() - t;
-			fprintf(stderr, "%10s %f %10lluus %10lluus\n", "vjson", x, parse_time, traverse_time);
+			LOG("%10s %f %10lluus %10lluus\n", "vjson", x, parse_time, traverse_time);
 
 			free(source);
 		}
@@ -190,12 +196,12 @@ int main(int argc, char **argv)
 			auto parse_time = now() - t;
 			if (!document.is_valid())
 			{
-				fprintf(stderr, "error: sajson: %s\n", document.get_error_message().c_str());
+				LOG("error: sajson: %s\n", document.get_error_message().c_str());
 			}
 			t = now();
 			double x = traverse_sajson(document.get_root());
 			auto traverse_time = now() - t;
-			fprintf(stderr, "%10s %f %10lluus %10lluus\n", "sajson", x, parse_time, traverse_time);
+			LOG("%10s %f %10lluus %10lluus\n", "sajson", x, parse_time, traverse_time);
 
 			free(source);
 		}
@@ -210,12 +216,12 @@ int main(int argc, char **argv)
 			auto parse_time = now() - t;
 			if (status != JSMN_SUCCESS)
 			{
-				fprintf(stderr, "error: stix-json: %d\n", status);
+				LOG("error: stix-json: %d\n", status);
 			}
 			t = now();
 			double x = traverse_stixjson(parser.GetRoot());
 			auto traverse_time = now() - t;
-			fprintf(stderr, "%10s %f %10lluus %10lluus\n", "stix-json", x, parse_time, traverse_time);
+			LOG("%10s %f %10lluus %10lluus\n", "stix-json", x, parse_time, traverse_time);
 
 			free(source);
 		}
