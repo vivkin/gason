@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <math.h>
 #include "gason.h"
 
 static unsigned char ctype[256];
@@ -38,20 +37,27 @@ static double str2float(const char *str, char **endptr)
 	if (*str == '.')
 	{
 		++str;
-		double base = 1;
-		while (is_dec(*str)) base *= 0.1, result += (*str++ - '0') * base;
+		double fraction = 1;
+		while (is_dec(*str)) fraction *= 0.1, result += (*str++ - '0') * fraction;
 	}
-	double exponent = 0;
 	if (*str == 'e' || *str == 'E')
 	{
 		++str;
-		double sign = 1;
-		if (is_sign(*str)) sign = ',' - *str++;
+		double base = 10;
+		if (is_sign(*str) && *str++ == '-') base = 0.1;
+		int exponent = 0;
 		while (is_dec(*str)) exponent = (exponent * 10) + (*str++ - '0');
-		exponent *= sign;
+		double power = 1;
+		while (exponent)
+		{
+			if (exponent & 1) power *= base;
+			exponent >>= 1;
+			base *= base;
+		}
+		result *= power;
 	}
 	*endptr = (char *)str;
-	return sign * result * pow(10, exponent);
+	return sign * result;
 }
 
 JsonAllocator::~JsonAllocator()
