@@ -7,11 +7,11 @@ static const struct ctype_init_t
 {
 	ctype_init_t()
 	{
-		for (int i : "\t\n\v\f\r\x20") ctype[i] |= 001;
-		for (int i : ",:]}") ctype[i] |= 002;
-		for (int i : "+-") ctype[i] |= 004;
-		for (int i : "0123456789") ctype[i] |= 010;
-		for (int i : "ABCDEF" "abcdef") ctype[i] |= 020;
+		for (const char *s = "\t\n\v\f\r\x20"; *s; ++s) ctype[(int)*s] |= 001;
+		for (const char *s = ",:]}\0"; *s; ++s) ctype[(int)*s] |= 002;
+		for (const char *s = "+-"; *s; ++s) ctype[(int)*s] |= 004;
+		for (const char *s = "0123456789"; *s; ++s) ctype[(int)*s] |= 010;
+		for (const char *s = "ABCDEF" "abcdef"; *s; ++s) ctype[(int)*s] |= 020;
 	}
 } ctype_init;
 
