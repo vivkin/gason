@@ -7,8 +7,9 @@ static const struct ctype_init_t
 {
 	ctype_init_t()
 	{
+		ctype[(int)'\0'] |= 002;
 		for (const char *s = "\t\n\v\f\r\x20"; *s; ++s) ctype[(int)*s] |= 001;
-		for (const char *s = ",:]}\0"; *s; ++s) ctype[(int)*s] |= 002;
+		for (const char *s = ",:]}"; *s; ++s) ctype[(int)*s] |= 002;
 		for (const char *s = "+-"; *s; ++s) ctype[(int)*s] |= 004;
 		for (const char *s = "0123456789"; *s; ++s) ctype[(int)*s] |= 010;
 		for (const char *s = "ABCDEF" "abcdef"; *s; ++s) ctype[(int)*s] |= 020;
