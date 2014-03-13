@@ -131,20 +131,20 @@ First column - parse time in microseconds, second - traverse and sum all numbers
 Intel Core i7 2.3 GHz, OSX 10.9, clang-500.2.79:
 ```
 shootout/big.json: length 6072200
-     gason 5520251617769.000000      20511us         *94us*
-     vjson 5520251617769.000000      *20378us*        101us
-    sajson 5520251617769.000000      23152us        145us
- stix-json 5520251617769.000000      21367us      55189us
+     gason      20092us         71us 	(5520251617769.000000)
+     vjson      19723us        156us 	(5520251617769.000000)
+    sajson      25226us        128us 	(5520251617769.000000)
+ rapidjson      18093us         96us 	(5520251617769.000000)
 shootout/data.json: length 17333
-     gason 3754.333493         *60us*          *5us*
-     vjson 3754.333471         61us          7us
-    sajson 3754.333493         92us         11us
- stix-json 3754.333493         89us         64us
+     gason         75us          4us 	(3754.333493)
+     vjson         80us          5us 	(3754.333471)
+    sajson        117us          8us 	(3754.333493)
+ rapidjson         91us          7us 	(3754.333493)
 shootout/monster.json: length 196473
-     gason 34474757.667613       *1176us*        *162us*
-     vjson 34474757.667621       2081us        191us
-    sajson 34474757.667613       1581us        232us
- stix-json 34474757.667613       2226us     160254us
+     gason        924us        162us 	(34474757.667613)
+     vjson       2218us        396us 	(34474757.667621)
+    sajson       1898us        380us 	(34474757.667613)
+ rapidjson       2210us        446us 	(34474757.667613)
 ```
 Samsung Galaxy Note II (GT-N7100), Android 4.1.1, gcc 4.8.2:
 ```
