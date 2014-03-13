@@ -15,7 +15,7 @@ gason is new version of [vjson](https://code.google.com/p/vjson) parser. It's st
 
 ## Features
 * No dependencies
-* Small codebase (~450 loc)
+* Small codebase (400 loc)
 * Small memory footprint (16-24B per value)
 
 gason is **not strict** parser:
@@ -166,4 +166,4 @@ I/ruberoid(28228):  stix-json 34474757.667613      12546us    1172294us
 ```
 
 ## License
-Distributed under the MIT license. Copyright (c) 2013, Ivan Vashchaev
+Distributed under the MIT license. Copyright (c) 2013-2014, Ivan Vashchaev
