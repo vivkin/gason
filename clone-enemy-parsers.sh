@@ -1,6 +1,6 @@
 [ ! -d vjson ] && hg clone https://code.google.com/p/vjson/
 [ ! -d sajson ] && git clone https://github.com/chadaustin/sajson.git
-[ ! -d stix-json ] && git clone -b nix-fix https://bitbucket.org/vivkin/stix-json.git
+[ ! -d rapidjson ] && svn checkout http://rapidjson.googlecode.com/svn/trunk/ rapidjson
 if [ ! -d shootout ]; then
 	mkdir shootout
 	cd shootout

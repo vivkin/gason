@@ -11,7 +11,7 @@
 #include "gason.h"
 #include "vjson/json.h"
 #include "sajson/include/sajson.h"
-#include "stix-json/JsonParser.h"
+#include "rapidjson/include/rapidjson/document.h"
 
 double traverse_gason(JsonValue o)
 {
@@ -87,28 +87,26 @@ double traverse_sajson(const sajson::value &v)
 	return x;
 }
 
-double traverse_stixjson(const stix::JsonValue &v)
+double traverse_rapidjson(const rapidjson::Value &v)
 {
 	double x = 0;
-	switch (v.GetType())
+	if (v.IsObject())
 	{
-		case JSMN_PRIMITIVE:
-			x += v.AsNumber();
-			break;
-		case JSMN_ARRAY:
-			for (stix::u32 i = 0; i < v.GetElementsCount(); ++i)
-			{
-				x += traverse_stixjson(v[i]);
-			}
-			break;
-		case JSMN_OBJECT:
-			for (stix::u32 i = 0; i < v.GetElementsCount(); ++i)
-			{
-				x += traverse_stixjson(v[i].GetValue());
-			}
-			break;
-		default:
-			return 0;
+		for (auto i = v.MemberBegin(); i != v.MemberEnd(); ++i)
+		{
+			x += traverse_rapidjson(i->value);
+		}
+	}
+	else if (v.IsArray())
+	{
+		for (auto i = v.Begin(); i != v.End(); ++i)
+		{
+			x += traverse_rapidjson(*i);
+		}
+	}
+	else if (v.IsNumber())
+	{
+		x = v.GetDouble();
 	}
 	return x;
 }
@@ -159,7 +157,7 @@ int main(int argc, char **argv)
 			t = now();
 			double x = traverse_gason(value);
 			auto traverse_time = now() - t;
-			LOG("%10s %f %10lluus %10lluus\n", "gason", x, parse_time, traverse_time);
+			LOG("%10s %10lluus %10lluus \t(%f)\n", "gason", parse_time, traverse_time, x);
 
 			free(source);
 		}
@@ -182,7 +180,7 @@ int main(int argc, char **argv)
 			t = now();
 			double x = traverse_vjson(root);
 			auto traverse_time = now() - t;
-			LOG("%10s %f %10lluus %10lluus\n", "vjson", x, parse_time, traverse_time);
+			LOG("%10s %10lluus %10lluus \t(%f)\n", "vjson", parse_time, traverse_time, x);
 
 			free(source);
 		}
@@ -201,27 +199,26 @@ int main(int argc, char **argv)
 			t = now();
 			double x = traverse_sajson(document.get_root());
 			auto traverse_time = now() - t;
-			LOG("%10s %f %10lluus %10lluus\n", "sajson", x, parse_time, traverse_time);
+			LOG("%10s %10lluus %10lluus \t(%f)\n", "sajson", parse_time, traverse_time, x);
 
 			free(source);
 		}
 
-		// stix-json
+		// rapidjson
 		{
 			char *source = strdup(buffer);
 
-			stix::JsonParser parser;
 			t = now();
-			int status = parser.ParseJsonString(source);
-			auto parse_time = now() - t;
-			if (status != JSMN_SUCCESS)
+			rapidjson::Document document;
+			if (document.ParseInsitu<0>(source).HasParseError())
 			{
-				LOG("error: stix-json: %d\n", status);
+				LOG("error: rapidjson: %s\n", document.GetParseError());
 			}
+			auto parse_time = now() - t;
 			t = now();
-			double x = traverse_stixjson(parser.GetRoot());
+			double x = traverse_rapidjson(document);
 			auto traverse_time = now() - t;
-			LOG("%10s %f %10lluus %10lluus\n", "stix-json", x, parse_time, traverse_time);
+			LOG("%10s %10lluus %10lluus \t(%f)\n", "rapidjson", parse_time, traverse_time, x);
 
 			free(source);
 		}

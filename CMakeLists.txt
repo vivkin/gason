@@ -33,7 +33,5 @@ if(SHOOTOUT)
 	add_executable(json-parser-shootout parser-shootout.cpp
 		gason.cpp
 		vjson/block_allocator.cpp
-		vjson/json.cpp
-		stix-json/jsmn/jsmn.c
-		stix-json/JsonParser.cpp)
+		vjson/json.cpp)
 endif()
