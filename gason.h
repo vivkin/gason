@@ -46,11 +46,7 @@ struct JsonValue
 		double f;
 	} data;
 
-	JsonValue()
-	{
-		data.i = JSON_VALUE_NULL;
-	}
-
+	JsonValue() { data.i = JSON_VALUE_NULL; }
 	JsonValue(JsonTag tag, void *p)
 	{
 		uint64_t x = (uint64_t)p;
@@ -58,51 +54,15 @@ struct JsonValue
 		assert(x <= JSON_VALUE_PAYLOAD_MASK);
 		data.i = JSON_VALUE_NAN_MASK | ((uint64_t)tag << JSON_VALUE_TAG_SHIFT) | x;
 	}
+	explicit JsonValue(double x) { data.f = x; }
 
-	explicit JsonValue(double x)
-	{
-		data.f = x;
-	}
-
-	bool isDouble() const
-	{
-		return (int64_t)data.i <= (int64_t)JSON_VALUE_NAN_MASK;
-	}
-
-	JsonTag getTag() const
-	{
-		return isDouble() ? JSON_TAG_NUMBER : JsonTag((data.i >> JSON_VALUE_TAG_SHIFT) & JSON_VALUE_TAG_MASK);
-	}
-
-	uint64_t getPayload() const
-	{
-		assert(!isDouble());
-		return data.i & JSON_VALUE_PAYLOAD_MASK;
-	}
-
-	double toNumber() const
-	{
-		assert(getTag() == JSON_TAG_NUMBER);
-		return data.f;
-	}
-
-	bool toBool() const
-	{
-		assert(getTag() == JSON_TAG_BOOL);
-		return (bool)getPayload();
-	}
-
-	char *toString() const
-	{
-		assert(getTag() == JSON_TAG_STRING);
-		return (char *)getPayload();
-	}
-
-	JsonNode *toNode() const
-	{
-		assert(getTag() == JSON_TAG_ARRAY || getTag() == JSON_TAG_OBJECT);
-		return (JsonNode *)getPayload();
-	}
+	bool isDouble() const { return (int64_t)data.i <= (int64_t)JSON_VALUE_NAN_MASK; }
+	JsonTag getTag() const { return isDouble() ? JSON_TAG_NUMBER : JsonTag((data.i >> JSON_VALUE_TAG_SHIFT) & JSON_VALUE_TAG_MASK); }
+	uint64_t getPayload() const { assert(!isDouble()); return data.i & JSON_VALUE_PAYLOAD_MASK; }
+	double toNumber() const { assert(getTag() == JSON_TAG_NUMBER); return data.f; }
+	bool toBool() const { assert(getTag() == JSON_TAG_BOOL); return (bool)getPayload(); }
+	char *toString() const { assert(getTag() == JSON_TAG_STRING); return (char *)getPayload(); }
+	JsonNode *toNode() const { assert(getTag() == JSON_TAG_ARRAY || getTag() == JSON_TAG_OBJECT); return (JsonNode *)getPayload(); }
 };
 
 struct JsonNode
