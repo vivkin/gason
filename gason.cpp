@@ -1,26 +1,9 @@
 #include <stdlib.h>
+#include <ctype.h>
 #include "gason.h"
 
-static unsigned char ctype[256];
-
-static const struct ctype_init_t
-{
-	ctype_init_t()
-	{
-		ctype[(int)'\0'] |= 002;
-		for (const char *s = "\t\n\v\f\r\x20"; *s; ++s) ctype[(int)*s] |= 001;
-		for (const char *s = ",:]}"; *s; ++s) ctype[(int)*s] |= 002;
-		for (const char *s = "+-"; *s; ++s) ctype[(int)*s] |= 004;
-		for (const char *s = "0123456789"; *s; ++s) ctype[(int)*s] |= 010;
-		for (const char *s = "ABCDEF" "abcdef"; *s; ++s) ctype[(int)*s] |= 020;
-	}
-} ctype_init;
-
-inline bool is_space(char c) { return (ctype[(int)(unsigned char)c] & 001) != 0; }
-inline bool is_delim(char c) { return (ctype[(int)(unsigned char)c] & 003) != 0; }
-inline bool is_sign(char c) { return (ctype[(int)(unsigned char)c] & 004) != 0; }
-inline bool is_dec(char c) { return (ctype[(int)(unsigned char)c] & 010) != 0; }
-inline bool is_hex(char c) { return (ctype[(int)(unsigned char)c] & 030) != 0; }
+inline bool is_delim(char c) { return isspace(c) || c == ',' || c == ':' || c == ']' || c == '}' || c == '\0'; }
+inline bool is_sign(char c) { return c == '-' || c == '+'; }
 
 inline int char2int(char c)
 {
@@ -33,19 +16,19 @@ static double str2float(const char *str, char **endptr)
 {
 	double sign = is_sign(*str) && *str++ == '-' ? -1 : 1;
 	double result = 0;
-	while (is_dec(*str)) result = (result * 10) + (*str++ - '0');
+	while (isdigit(*str)) result = (result * 10) + (*str++ - '0');
 	if (*str == '.')
 	{
 		++str;
 		double fraction = 1;
-		while (is_dec(*str)) fraction *= 0.1, result += (*str++ - '0') * fraction;
+		while (isdigit(*str)) fraction *= 0.1, result += (*str++ - '0') * fraction;
 	}
 	if (*str == 'e' || *str == 'E')
 	{
 		++str;
 		double base = is_sign(*str) && *str++ == '-' ? 0.1 : 10;
 		int exponent = 0;
-		while (is_dec(*str)) exponent = (exponent * 10) + (*str++ - '0');
+		while (isdigit(*str)) exponent = (exponent * 10) + (*str++ - '0');
 		double power = 1;
 		for (; exponent; exponent >>= 1, base *= base) if (exponent & 1) power *= base;
 		result *= power;
@@ -136,14 +119,14 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 	while (*str)
 	{
 		JsonValue o;
-		while (*str && is_space(*str)) ++str;
+		while (*str && isspace(*str)) ++str;
 		*endptr = str++;
 		switch (**endptr)
 		{
 			case '\0':
 				continue;
 			case '-':
-				if (!is_dec(*str) && *str != '.') return *endptr = str, JSON_PARSE_BAD_NUMBER;
+				if (!isdigit(*str) && *str != '.') return *endptr = str, JSON_PARSE_BAD_NUMBER;
 			case '0':
 			case '1':
 			case '2':
@@ -179,7 +162,7 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 								c = 0;
 								for (int i = 0; i < 4; ++i)
 								{
-									if (!is_hex(*++str)) return *endptr = str, JSON_PARSE_BAD_STRING;
+									if (!isxdigit(*++str)) return *endptr = str, JSON_PARSE_BAD_STRING;
 									c = c * 16 + char2int(*str);
 								}
 								if (c < 0x80)
