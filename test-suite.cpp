@@ -144,7 +144,7 @@ int main()
 	for (auto t : SUITE)
 	{
 		char *source = strdup(t.s);
-		JsonParseStatus status = json_parse(source, &endptr, &value, allocator);
+		JsonParseStatus status = gasonParse(source, &endptr, &value, allocator);
 		free(source);
 		if (t.f ^ (status == JSON_PARSE_OK))
 		{

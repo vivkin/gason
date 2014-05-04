@@ -3,9 +3,6 @@
 #include <stdint.h>
 #include <assert.h>
 
-#define JSON_ZONE_SIZE 4096
-#define JSON_STACK_SIZE 32
-
 struct JsonAllocator {
 	struct Zone {
 		Zone *next;
@@ -15,7 +12,7 @@ struct JsonAllocator {
 	Zone *head = nullptr;
 
 	~JsonAllocator();
-	void *allocate(size_t n, size_t align = 8);
+	void *allocate(size_t size, size_t alignment = 8);
 };
 
 #define JSON_VALUE_PAYLOAD_MASK 0x00007FFFFFFFFFFFULL
@@ -125,4 +122,4 @@ enum JsonParseStatus {
 	JSON_PARSE_BREAKING_BAD
 };
 
-JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator);
+JsonParseStatus gasonParse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator);

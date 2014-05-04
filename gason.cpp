@@ -1,75 +1,35 @@
-#include <stdlib.h>
-#include <ctype.h>
 #include "gason.h"
+#include <ctype.h>
+#include <stdlib.h>
 
-inline bool isdelim(char c) { return isspace(c) || c == ',' || c == ':' || c == ']' || c == '}' || c == '\0'; }
-
-inline int char2int(char c) {
-	if (c >= 'a')
-		return c - 'a' + 10;
-	if (c >= 'A')
-		return c - 'A' + 10;
-	return c - '0';
-}
-
-static double str2float(const char *str, char **endptr) {
-	char sign = *str;
-	if (sign == '+' || sign == '-')
-		++str;
-	double result = 0;
-	while (isdigit(*str))
-		result = (result * 10) + (*str++ - '0');
-	if (*str == '.') {
-		++str;
-		double fraction = 1;
-		while (isdigit(*str))
-			fraction *= 0.1, result += (*str++ - '0') * fraction;
-	}
-	if (*str == 'e' || *str == 'E') {
-		++str;
-		double base = 10;
-		if (*str == '+')
-			++str;
-		else if (*str == '-') {
-			++str;
-			base = 0.1;
-		}
-		int exponent = 0;
-		while (isdigit(*str))
-			exponent = (exponent * 10) + (*str++ - '0');
-		double power = 1;
-		for (; exponent; exponent >>= 1, base *= base)
-			if (exponent & 1)
-				power *= base;
-		result *= power;
-	}
-	*endptr = (char *)str;
-	return sign == '-' ? -result : result;
-}
+#define JSON_ZONE_SIZE 4096
+#define JSON_STACK_SIZE 32
 
 JsonAllocator::~JsonAllocator() {
 	while (head) {
-		Zone *temp = head->next;
+		Zone *next = head->next;
 		free(head);
-		head = temp;
+		head = next;
 	}
 }
 
-inline void *align_pointer(void *x, size_t align) { return (void *)(((uintptr_t)x + (align - 1)) & ~(align - 1)); }
+static inline void *align_pointer(void *p, size_t alignment) {
+	return (void *)(((uintptr_t)p + (alignment - 1)) & ~(alignment - 1));
+}
 
-void *JsonAllocator::allocate(size_t n, size_t align) {
+void *JsonAllocator::allocate(size_t size, size_t alignment) {
 	if (head) {
-		char *p = (char *)align_pointer(head->end, align);
-		if (p + n <= (char *)head + JSON_ZONE_SIZE) {
-			head->end = p + n;
+		char *p = (char *)align_pointer(head->end, alignment);
+		if (p + size <= (char *)head + JSON_ZONE_SIZE) {
+			head->end = p + size;
 			return p;
 		}
 	}
-	size_t zone_size = sizeof(Zone) + n + align;
-	Zone *z = (Zone *)malloc(zone_size <= JSON_ZONE_SIZE ? JSON_ZONE_SIZE : zone_size);
-	char *p = (char *)align_pointer(z + 1, align);
-	z->end = p + n;
-	if (zone_size <= JSON_ZONE_SIZE || head == nullptr) {
+	size_t zoneSize = sizeof(Zone) + (size + (alignment - 1) & ~(alignment - 1));
+	Zone *z = (Zone *)malloc(zoneSize <= JSON_ZONE_SIZE ? JSON_ZONE_SIZE : zoneSize);
+	char *p = (char *)align_pointer(z + 1, alignment);
+	z->end = p + size;
+	if (zoneSize <= JSON_ZONE_SIZE || head == nullptr) {
 		z->next = head;
 		head = z;
 	} else {
@@ -106,7 +66,63 @@ struct JsonList {
 	}
 };
 
-JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator) {
+static inline bool isdelim(char c) {
+	return isspace(c) || c == ',' || c == ':' || c == ']' || c == '}' || c == '\0';
+}
+
+static inline int char2int(char c) {
+	if (c >= 'a')
+		return c - 'a' + 10;
+	if (c >= 'A')
+		return c - 'A' + 10;
+	return c - '0';
+}
+
+static double string2double(char *s, char **endptr) {
+	char ch = *s;
+	if (ch == '+' || ch == '-')
+		++s;
+
+	double result = 0;
+	while (isdigit(*s))
+		result = (result * 10) + (*s++ - '0');
+
+	if (*s == '.') {
+		++s;
+
+		double fraction = 1;
+		while (isdigit(*s))
+			fraction *= 0.1, result += (*s++ - '0') * fraction;
+	}
+
+	if (*s == 'e' || *s == 'E') {
+		++s;
+
+		double base = 10;
+		if (*s == '+')
+			++s;
+		else if (*s == '-') {
+			++s;
+			base = 0.1;
+		}
+
+		int exponent = 0;
+		while (isdigit(*s))
+			exponent = (exponent * 10) + (*s++ - '0');
+
+		double power = 1;
+		for (; exponent; exponent >>= 1, base *= base)
+			if (exponent & 1)
+				power *= base;
+
+		result *= power;
+	}
+
+	*endptr = s;
+	return ch == '-' ? -result : result;
+}
+
+JsonParseStatus gasonParse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator) {
 	JsonList stack[JSON_STACK_SIZE];
 	int top = -1;
 	bool separator = true;
@@ -131,7 +147,7 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 		case '7':
 		case '8':
 		case '9':
-			o = JsonValue(str2float(*endptr, &str));
+			o = JsonValue(string2double(*endptr, &str));
 			if (!isdelim(*str))
 				return *endptr = str, JSON_PARSE_BAD_NUMBER;
 			break;
