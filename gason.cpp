@@ -2,8 +2,7 @@
 #include <ctype.h>
 #include "gason.h"
 
-inline bool is_delim(char c) { return isspace(c) || c == ',' || c == ':' || c == ']' || c == '}' || c == '\0'; }
-inline bool is_sign(char c) { return c == '-' || c == '+'; }
+inline bool isdelim(char c) { return isspace(c) || c == ',' || c == ':' || c == ']' || c == '}' || c == '\0'; }
 
 inline int char2int(char c)
 {
@@ -14,7 +13,9 @@ inline int char2int(char c)
 
 static double str2float(const char *str, char **endptr)
 {
-	double sign = is_sign(*str) && *str++ == '-' ? -1 : 1;
+	char sign = *str;
+	if (sign == '+' || sign == '-')
+		++str;
 	double result = 0;
 	while (isdigit(*str)) result = (result * 10) + (*str++ - '0');
 	if (*str == '.')
@@ -26,7 +27,13 @@ static double str2float(const char *str, char **endptr)
 	if (*str == 'e' || *str == 'E')
 	{
 		++str;
-		double base = is_sign(*str) && *str++ == '-' ? 0.1 : 10;
+		double base = 10;
+		if (*str == '+')
+			++str;
+		else if (*str == '-') {
+			++str;
+			base = 0.1;
+		}
 		int exponent = 0;
 		while (isdigit(*str)) exponent = (exponent * 10) + (*str++ - '0');
 		double power = 1;
@@ -34,7 +41,7 @@ static double str2float(const char *str, char **endptr)
 		result *= power;
 	}
 	*endptr = (char *)str;
-	return sign * result;
+	return sign == '-' ? -result : result;
 }
 
 JsonAllocator::~JsonAllocator()
@@ -138,7 +145,7 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 			case '8':
 			case '9':
 				o = JsonValue(str2float(*endptr, &str));
-				if (!is_delim(*str)) return *endptr = str, JSON_PARSE_BAD_NUMBER;
+				if (!isdelim(*str)) return *endptr = str, JSON_PARSE_BAD_NUMBER;
 				break;
 			case '"':
 				o = JsonValue(JSON_TAG_STRING, str);
@@ -192,14 +199,14 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 						break;
 					}
 				}
-				if (!is_delim(*str)) return *endptr = str, JSON_PARSE_BAD_STRING;
+				if (!isdelim(*str)) return *endptr = str, JSON_PARSE_BAD_STRING;
 				break;
 			case 't':
 				for (const char *s = "rue"; *s; ++s, ++str)
 				{
 					if (*s != *str) return JSON_PARSE_BAD_IDENTIFIER;
 				}
-				if (!is_delim(*str)) return JSON_PARSE_BAD_IDENTIFIER;
+				if (!isdelim(*str)) return JSON_PARSE_BAD_IDENTIFIER;
 				o = JsonValue(JSON_TAG_BOOL, (void *)true);
 				break;
 			case 'f':
@@ -207,7 +214,7 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 				{
 					if (*s != *str) return JSON_PARSE_BAD_IDENTIFIER;
 				}
-				if (!is_delim(*str)) return JSON_PARSE_BAD_IDENTIFIER;
+				if (!isdelim(*str)) return JSON_PARSE_BAD_IDENTIFIER;
 				o = JsonValue(JSON_TAG_BOOL, (void *)false);
 				break;
 			case 'n':
@@ -215,7 +222,7 @@ JsonParseStatus json_parse(char *str, char **endptr, JsonValue *value, JsonAlloc
 				{
 					if (*s != *str) return JSON_PARSE_BAD_IDENTIFIER;
 				}
-				if (!is_delim(*str)) return JSON_PARSE_BAD_IDENTIFIER;
+				if (!isdelim(*str)) return JSON_PARSE_BAD_IDENTIFIER;
 				break;
 			case ']':
 				if (top == -1) return JSON_PARSE_STACK_UNDERFLOW;
