@@ -39,33 +39,6 @@ void *JsonAllocator::allocate(size_t size, size_t alignment) {
 	return p;
 }
 
-struct JsonList {
-	JsonTag tag;
-	JsonValue node;
-	char *key;
-
-	void grow_the_tail(JsonNode *p) {
-		JsonNode *tail = (JsonNode *)node.getPayload();
-		if (tail) {
-			p->next = tail->next;
-			tail->next = p;
-		} else {
-			p->next = p;
-		}
-		node = JsonValue(tag, p);
-	}
-
-	JsonValue cut_the_head() {
-		JsonNode *tail = (JsonNode *)node.getPayload();
-		if (tail) {
-			JsonNode *head = tail->next;
-			tail->next = nullptr;
-			return JsonValue(tag, head);
-		}
-		return node;
-	}
-};
-
 static inline bool isdelim(char c) {
 	return isspace(c) || c == ',' || c == ':' || c == ']' || c == '}' || c == '\0';
 }
@@ -122,10 +95,33 @@ static double string2double(char *s, char **endptr) {
 	return ch == '-' ? -result : result;
 }
 
+static inline JsonNode *insertAfter(JsonNode *tail, JsonNode *node) {
+	if (!tail)
+		return node->next = node;
+	node->next = tail->next;
+	tail->next = node;
+	return node;
+}
+
+static inline JsonValue listToValue(JsonTag tag, JsonNode *tail) {
+	if (tail) {
+		auto head = tail->next;
+		tail->next = nullptr;
+		return JsonValue(tag, head);
+	}
+	return JsonValue(tag, nullptr);
+}
+
 JsonParseStatus gasonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator) {
-	JsonList stack[JSON_STACK_SIZE];
+	struct {
+		char *key;
+		JsonNode *tail;
+		JsonTag tag;
+	} stack[JSON_STACK_SIZE];
 	int top = -1;
+
 	bool separator = true;
+
 	while (*s) {
 		JsonValue o;
 
@@ -250,24 +246,24 @@ JsonParseStatus gasonParse(char *s, char **endptr, JsonValue *value, JsonAllocat
 				return JSON_PARSE_STACK_UNDERFLOW;
 			if (stack[top].tag != JSON_TAG_ARRAY)
 				return JSON_PARSE_MISMATCH_BRACKET;
-			o = stack[top--].cut_the_head();
+			o = listToValue(JSON_TAG_ARRAY, stack[top--].tail);
 			break;
 		case '}':
 			if (top == -1)
 				return JSON_PARSE_STACK_UNDERFLOW;
 			if (stack[top].tag != JSON_TAG_OBJECT)
 				return JSON_PARSE_MISMATCH_BRACKET;
-			o = stack[top--].cut_the_head();
+			o = listToValue(JSON_TAG_OBJECT, stack[top--].tail);
 			break;
 		case '[':
 			if (++top == JSON_STACK_SIZE)
 				return JSON_PARSE_STACK_OVERFLOW;
-			stack[top] = {JSON_TAG_ARRAY, JsonValue(JSON_TAG_ARRAY, nullptr), nullptr};
+			stack[top] = {nullptr, nullptr, JSON_TAG_ARRAY};
 			continue;
 		case '{':
 			if (++top == JSON_STACK_SIZE)
 				return JSON_PARSE_STACK_OVERFLOW;
-			stack[top] = {JSON_TAG_OBJECT, JsonValue(JSON_TAG_OBJECT, nullptr), nullptr};
+			stack[top] = {nullptr, nullptr, JSON_TAG_OBJECT};
 			continue;
 		case ':':
 			if (separator || stack[top].key == nullptr)
@@ -302,13 +298,13 @@ JsonParseStatus gasonParse(char *s, char **endptr, JsonValue *value, JsonAllocat
 			p->value = o;
 			p->key = stack[top].key;
 			stack[top].key = nullptr;
-			stack[top].grow_the_tail((JsonNode *)p);
+			stack[top].tail = insertAfter(stack[top].tail, p);
 			continue;
 		}
 
 		JsonNode *p = (JsonNode *)allocator.allocate(sizeof(JsonNode) - sizeof(char *));
 		p->value = o;
-		stack[top].grow_the_tail(p);
+		stack[top].tail = insertAfter(stack[top].tail, p);
 	}
 	return JSON_PARSE_BREAKING_BAD;
 }
