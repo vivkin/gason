@@ -3,18 +3,6 @@
 #include <stdint.h>
 #include <assert.h>
 
-struct JsonAllocator {
-	struct Zone {
-		Zone *next;
-		char *end;
-	};
-
-	Zone *head = nullptr;
-
-	~JsonAllocator();
-	void *allocate(size_t size, size_t alignment = 8);
-};
-
 #define JSON_VALUE_PAYLOAD_MASK 0x00007FFFFFFFFFFFULL
 #define JSON_VALUE_NAN_MASK 0x7FF8000000000000ULL
 #define JSON_VALUE_NULL 0x7FFF800000000000ULL
@@ -120,6 +108,18 @@ enum JsonParseStatus {
 	JSON_PARSE_UNEXPECTED_CHARACTER,
 	JSON_PARSE_UNQUOTED_KEY,
 	JSON_PARSE_BREAKING_BAD
+};
+
+class JsonAllocator {
+	struct Zone {
+		Zone *next;
+		size_t used;
+	} *head = nullptr;
+
+public:
+	~JsonAllocator();
+	void *allocate(size_t size);
+	void deallocate();
 };
 
 JsonParseStatus gasonParse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator);

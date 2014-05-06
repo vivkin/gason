@@ -6,37 +6,37 @@
 #define JSON_STACK_SIZE 32
 
 JsonAllocator::~JsonAllocator() {
-	while (head) {
-		Zone *next = head->next;
-		free(head);
-		head = next;
-	}
+	deallocate();
 }
 
-static inline void *alignPointer(void *p, size_t alignment) {
-	return (void *)(((uintptr_t)p + (alignment - 1)) & ~(alignment - 1));
-}
-
-void *JsonAllocator::allocate(size_t size, size_t alignment) {
+void *JsonAllocator::allocate(size_t size) {
+	assert(size & 7 == 0);
 	if (head) {
-		char *p = (char *)alignPointer(head->end, alignment);
-		if (p + size <= (char *)head + JSON_ZONE_SIZE) {
-			head->end = p + size;
+		if (head->used + size <= JSON_ZONE_SIZE) {
+			char *p = (char *)head + head->used;
+			head->used += size;
 			return p;
 		}
 	}
-	size_t zoneSize = sizeof(Zone) + (size + (alignment - 1) & ~(alignment - 1));
-	Zone *z = (Zone *)malloc(zoneSize <= JSON_ZONE_SIZE ? JSON_ZONE_SIZE : zoneSize);
-	char *p = (char *)alignPointer(z + 1, alignment);
-	z->end = p + size;
-	if (zoneSize <= JSON_ZONE_SIZE || head == nullptr) {
+	size_t allocSize = sizeof(Zone) + size;
+	Zone *z = (Zone *)malloc(allocSize <= JSON_ZONE_SIZE ? JSON_ZONE_SIZE : allocSize);
+	z->used = allocSize;
+	if (allocSize <= JSON_ZONE_SIZE || head == nullptr) {
 		z->next = head;
 		head = z;
 	} else {
 		z->next = head->next;
 		head->next = z;
 	}
-	return p;
+	return (char *)z + sizeof(Zone);
+}
+
+void JsonAllocator::deallocate() {
+	while (head) {
+		Zone *next = head->next;
+		free(head);
+		head = next;
+	}
 }
 
 static inline bool isdelim(char c) {
@@ -297,13 +297,12 @@ JsonParseStatus gasonParse(char *s, char **endptr, JsonValue *value, JsonAllocat
 				continue;
 			}
 			tails[top] = insertAfter(tails[top], (JsonNode *)allocator.allocate(sizeof(JsonNode)));
-			tails[top]->value = o;
 			tails[top]->key = keys[top];
 			keys[top] = nullptr;
 		} else {
 			tails[top] = insertAfter(tails[top], (JsonNode *)allocator.allocate(sizeof(JsonNode) - sizeof(char *)));
-			tails[top]->value = o;
 		}
+		tails[top]->value = o;
 	}
 	return JSON_PARSE_BREAKING_BAD;
 }
