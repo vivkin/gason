@@ -13,13 +13,13 @@ JsonAllocator::~JsonAllocator() {
 	}
 }
 
-static inline void *align_pointer(void *p, size_t alignment) {
+static inline void *alignPointer(void *p, size_t alignment) {
 	return (void *)(((uintptr_t)p + (alignment - 1)) & ~(alignment - 1));
 }
 
 void *JsonAllocator::allocate(size_t size, size_t alignment) {
 	if (head) {
-		char *p = (char *)align_pointer(head->end, alignment);
+		char *p = (char *)alignPointer(head->end, alignment);
 		if (p + size <= (char *)head + JSON_ZONE_SIZE) {
 			head->end = p + size;
 			return p;
@@ -27,7 +27,7 @@ void *JsonAllocator::allocate(size_t size, size_t alignment) {
 	}
 	size_t zoneSize = sizeof(Zone) + (size + (alignment - 1) & ~(alignment - 1));
 	Zone *z = (Zone *)malloc(zoneSize <= JSON_ZONE_SIZE ? JSON_ZONE_SIZE : zoneSize);
-	char *p = (char *)align_pointer(z + 1, alignment);
+	char *p = (char *)alignPointer(z + 1, alignment);
 	z->end = p + size;
 	if (zoneSize <= JSON_ZONE_SIZE || head == nullptr) {
 		z->next = head;
@@ -122,21 +122,25 @@ static double string2double(char *s, char **endptr) {
 	return ch == '-' ? -result : result;
 }
 
-JsonParseStatus gasonParse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator) {
+JsonParseStatus gasonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator) {
 	JsonList stack[JSON_STACK_SIZE];
 	int top = -1;
 	bool separator = true;
-	while (*str) {
+	while (*s) {
 		JsonValue o;
-		while (*str && isspace(*str))
-			++str;
-		*endptr = str++;
+
+		while (*s && isspace(*s))
+			++s;
+
+		*endptr = s++;
 		switch (**endptr) {
 		case '\0':
 			continue;
 		case '-':
-			if (!isdigit(*str) && *str != '.')
-				return *endptr = str, JSON_PARSE_BAD_NUMBER;
+			if (!isdigit(*s) && *s != '.') {
+				*endptr = s;
+				return JSON_PARSE_BAD_NUMBER;
+			}
 		case '0':
 		case '1':
 		case '2':
@@ -147,91 +151,98 @@ JsonParseStatus gasonParse(char *str, char **endptr, JsonValue *value, JsonAlloc
 		case '7':
 		case '8':
 		case '9':
-			o = JsonValue(string2double(*endptr, &str));
-			if (!isdelim(*str))
-				return *endptr = str, JSON_PARSE_BAD_NUMBER;
+			o = JsonValue(string2double(*endptr, &s));
+			if (!isdelim(*s)) {
+				*endptr = s;
+				return JSON_PARSE_BAD_NUMBER;
+			}
 			break;
 		case '"':
-			o = JsonValue(JSON_TAG_STRING, str);
-			for (char *s = str; *str; ++s, ++str) {
-				int c = *s = *str;
+			o = JsonValue(JSON_TAG_STRING, s);
+			for (char *it = s; *s; ++it, ++s) {
+				int c = *it = *s;
 				if (c == '\\') {
-					c = *++str;
+					c = *++s;
 					switch (c) {
 					case '\\':
 					case '"':
 					case '/':
-						*s = c;
+						*it = c;
 						break;
 					case 'b':
-						*s = '\b';
+						*it = '\b';
 						break;
 					case 'f':
-						*s = '\f';
+						*it = '\f';
 						break;
 					case 'n':
-						*s = '\n';
+						*it = '\n';
 						break;
 					case 'r':
-						*s = '\r';
+						*it = '\r';
 						break;
 					case 't':
-						*s = '\t';
+						*it = '\t';
 						break;
 					case 'u':
 						c = 0;
 						for (int i = 0; i < 4; ++i) {
-							if (!isxdigit(*++str))
-								return *endptr = str, JSON_PARSE_BAD_STRING;
-							c = c * 16 + char2int(*str);
+							if (!isxdigit(*++s)) {
+								*endptr = s;
+								return JSON_PARSE_BAD_STRING;
+							}
+							c = c * 16 + char2int(*s);
 						}
 						if (c < 0x80) {
-							*s = c;
+							*it = c;
 						} else if (c < 0x800) {
-							*s++ = 0xC0 | (c >> 6);
-							*s = 0x80 | (c & 0x3F);
+							*it++ = 0xC0 | (c >> 6);
+							*it = 0x80 | (c & 0x3F);
 						} else {
-							*s++ = 0xE0 | (c >> 12);
-							*s++ = 0x80 | ((c >> 6) & 0x3F);
-							*s = 0x80 | (c & 0x3F);
+							*it++ = 0xE0 | (c >> 12);
+							*it++ = 0x80 | ((c >> 6) & 0x3F);
+							*it = 0x80 | (c & 0x3F);
 						}
 						break;
 					default:
-						return *endptr = str, JSON_PARSE_BAD_STRING;
+						*endptr = s;
+						return JSON_PARSE_BAD_STRING;
 					}
 				} else if (c == '"') {
-					*s = 0;
-					++str;
+					*it = 0;
+					++s;
 					break;
 				}
 			}
-			if (!isdelim(*str))
-				return *endptr = str, JSON_PARSE_BAD_STRING;
+			if (!isdelim(*s)) {
+				*endptr = s;
+				return JSON_PARSE_BAD_STRING;
+			}
 			break;
 		case 't':
-			for (const char *s = "rue"; *s; ++s, ++str) {
-				if (*s != *str)
+			for (const char *it = "rue"; *it; ++it, ++s) {
+				if (*it != *s)
 					return JSON_PARSE_BAD_IDENTIFIER;
 			}
-			if (!isdelim(*str))
+			if (!isdelim(*s))
 				return JSON_PARSE_BAD_IDENTIFIER;
 			o = JsonValue(JSON_TAG_BOOL, (void *)true);
 			break;
 		case 'f':
-			for (const char *s = "alse"; *s; ++s, ++str) {
-				if (*s != *str)
+			for (const char *it = "alse"; *it; ++it, ++s) {
+				if (*it != *s)
 					return JSON_PARSE_BAD_IDENTIFIER;
 			}
-			if (!isdelim(*str))
+			if (!isdelim(*s))
 				return JSON_PARSE_BAD_IDENTIFIER;
 			o = JsonValue(JSON_TAG_BOOL, (void *)false);
 			break;
 		case 'n':
-			for (const char *s = "ull"; *s; ++s, ++str) {
-				if (*s != *str)
+			for (const char *it = "ull"; *it; ++it, ++s) {
+				if (*it != *s)
 					return JSON_PARSE_BAD_IDENTIFIER;
 			}
-			if (!isdelim(*str))
+			if (!isdelim(*s))
 				return JSON_PARSE_BAD_IDENTIFIER;
 			break;
 		case ']':
@@ -275,7 +286,7 @@ JsonParseStatus gasonParse(char *str, char **endptr, JsonValue *value, JsonAlloc
 		separator = false;
 
 		if (top == -1) {
-			*endptr = str;
+			*endptr = s;
 			*value = o;
 			return JSON_PARSE_OK;
 		}
