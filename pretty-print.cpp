@@ -171,7 +171,7 @@ int main(int argc, char **argv)
 	JsonValue value;
 	JsonAllocator allocator;
 	unsigned long long t = now();
-	JsonParseStatus status = gasonParse(source, &endptr, &value, allocator);
+	JsonParseStatus status = jsonParse(source, &endptr, &value, allocator);
 	if (status != JSON_PARSE_OK)
 	{
 		print_error(filename, status, endptr, source, source_size);

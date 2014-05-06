@@ -122,4 +122,4 @@ public:
 	void deallocate();
 };
 
-JsonParseStatus gasonParse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator);
+JsonParseStatus jsonParse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator);

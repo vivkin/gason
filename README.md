@@ -15,13 +15,14 @@ gason is new version of [vjson](https://code.google.com/p/vjson) parser. It's st
 
 ## Features
 * No dependencies
-* Small codebase (400 loc)
+* Small codebase (~450 loc)
 * Small memory footprint (16-24B per value)
 
 gason is **not strict** parser:
 * Source buffer can contain more than one value (first will be parsed; pointer to the rest returns)
 * Single number, string or identifier will be succesfully parsed
 * Trailing `,` before closing `]` or `}` is not an error
+* Allowed control characters in strings
 
 gason is **destructive** parser, i.e. you **source buffer** will be **modified**! Strings stored as pointers to source buffer, where closing `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects are represented as single linked list (without random access).
 
@@ -41,7 +42,7 @@ char *source = get_useless_facebook_response(); // or read file, whatever
 char *endptr;
 JsonValue value;
 JsonAllocator allocator;
-JsonParseStatus status = json_parse(source, &endptr, &value, allocator);
+JsonParseStatus status = jsonParse(source, &endptr, &value, allocator);
 if (status != JSON_PARSE_OK)
 {
 	fprintf(stderr, "error at %zd, status: %d\n", endptr - source, (int)status);
