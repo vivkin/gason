@@ -10,7 +10,8 @@ JsonAllocator::~JsonAllocator() {
 }
 
 void *JsonAllocator::allocate(size_t size) {
-	assert(size & 7 == 0);
+	size = size + 7 & 7;
+
 	if (head) {
 		if (head->used + size <= JSON_ZONE_SIZE) {
 			char *p = (char *)head + head->used;
@@ -18,17 +19,18 @@ void *JsonAllocator::allocate(size_t size) {
 			return p;
 		}
 	}
+
 	size_t allocSize = sizeof(Zone) + size;
-	Zone *z = (Zone *)malloc(allocSize <= JSON_ZONE_SIZE ? JSON_ZONE_SIZE : allocSize);
-	z->used = allocSize;
+	Zone *zone = (Zone *)malloc(allocSize <= JSON_ZONE_SIZE ? JSON_ZONE_SIZE : allocSize);
+	zone->used = allocSize;
 	if (allocSize <= JSON_ZONE_SIZE || head == nullptr) {
-		z->next = head;
-		head = z;
+		zone->next = head;
+		head = zone;
 	} else {
-		z->next = head->next;
-		head->next = z;
+		zone->next = head->next;
+		head->next = zone;
 	}
-	return (char *)z + sizeof(Zone);
+	return (char *)zone + sizeof(Zone);
 }
 
 void JsonAllocator::deallocate() {
