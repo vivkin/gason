@@ -10,7 +10,7 @@ JsonAllocator::~JsonAllocator() {
 }
 
 void *JsonAllocator::allocate(size_t size) {
-	size = size + 7 & 7;
+	size = size + 7 & ~7;
 
 	if (head) {
 		if (head->used + size <= JSON_ZONE_SIZE) {
