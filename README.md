@@ -22,7 +22,7 @@ gason is **not strict** parser:
 * Source buffer can contain more than one value (first will be parsed; pointer to the rest returns)
 * Single number, string or identifier will be succesfully parsed
 * Trailing `,` before closing `]` or `}` is not an error
-* Allowed control characters in strings
+* Control characters in strings are allowed
 
 gason is **destructive** parser, i.e. you **source buffer** will be **modified**! Strings stored as pointers to source buffer, where closing `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects are represented as single linked list (without random access).
 
@@ -43,8 +43,7 @@ char *endptr;
 JsonValue value;
 JsonAllocator allocator;
 JsonParseStatus status = jsonParse(source, &endptr, &value, allocator);
-if (status != JSON_PARSE_OK)
-{
+if (status != JSON_PARSE_OK) {
 	fprintf(stderr, "error at %zd, status: %d\n", endptr - source, (int)status);
 	exit(EXIT_FAILURE);
 }
@@ -53,37 +52,33 @@ All **values** will become **invalid** when **allocator** be **destroyed**. For 
 
 ### Iteration
 ```cpp
-double sum_and_print(JsonValue o)
-{
+double sum_and_print(JsonValue o) {
 	double sum = 0;
-	switch (o.getTag())
-	{
-		case JSON_TAG_NUMBER:
-			printf("%g\n", o.toNumber());
-			sum += o.toNumber();
-			break;
-		case JSON_TAG_BOOL:
-			printf("%s\n", o.toBool() ? "true" : "false");
-			break;
-		case JSON_TAG_STRING:
-			printf("\"%s\"\n", o.toString());
-			break;
-		case JSON_TAG_ARRAY:
-			for (auto i : o)
-			{
-				sum += sum_and_print(i->value);
-			}
-			break;
-		case JSON_TAG_OBJECT:
-			for (auto i : o)
-			{
-				printf("%s = ", i->key);
-				sum += sum_and_print(i->value);
-			}
-			break;
-		case JSON_TAG_NULL:
-			printf("null\n");
-			break;
+	switch (o.getTag()) {
+	case JSON_TAG_NUMBER:
+		printf("%g\n", o.toNumber());
+		sum += o.toNumber();
+		break;
+	case JSON_TAG_BOOL:
+		printf("%s\n", o.toBool() ? "true" : "false");
+		break;
+	case JSON_TAG_STRING:
+		printf("\"%s\"\n", o.toString());
+		break;
+	case JSON_TAG_ARRAY:
+		for (auto i : o) {
+			sum += sum_and_print(i->value);
+		}
+		break;
+	case JSON_TAG_OBJECT:
+		for (auto i : o) {
+			printf("%s = ", i->key);
+			sum += sum_and_print(i->value);
+		}
+		break;
+	case JSON_TAG_NULL:
+		printf("null\n");
+		break;
 	}
 	return sum;
 }
