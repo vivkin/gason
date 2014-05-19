@@ -10,7 +10,7 @@
 #define JSON_VALUE_TAG_SHIFT 47
 
 enum JsonTag {
-	JSON_TAG_NUMBER,
+	JSON_TAG_NUMBER = 0,
 	JSON_TAG_STRING,
 	JSON_TAG_BOOL,
 	JSON_TAG_ARRAY,
@@ -32,7 +32,7 @@ union JsonValue {
 	}
 	JsonValue(JsonTag tag, void *p) {
 		uint64_t x = (uint64_t)p;
-		assert((int)tag <= JSON_VALUE_TAG_MASK);
+		assert(tag <= JSON_VALUE_TAG_MASK);
 		assert(x <= JSON_VALUE_PAYLOAD_MASK);
 		ival = JSON_VALUE_NAN_MASK | ((uint64_t)tag << JSON_VALUE_TAG_SHIFT) | x;
 	}
