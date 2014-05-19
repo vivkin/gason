@@ -142,23 +142,23 @@ shootout/monster.json: length 196473
     sajson       1898us        380us 	(34474757.667613)
  rapidjson       2210us        446us 	(34474757.667613)
 ```
-Samsung Galaxy Note II (GT-N7100), Android 4.1.1, gcc 4.8.2:
+Samsung Galaxy Note II (GT-N7100), Android 4.3, gcc 4.8.2:
 ```
-I/ruberoid(28228): /sdcard/Download/shootout/big.json: length 6072200
-I/ruberoid(28228):      gason 5520251617769.000000      67839us        *569us*
-I/ruberoid(28228):      vjson 5520251617769.000000      *61227us*       1013us
-I/ruberoid(28228):     sajson 5520251617769.000000      80071us       1818us
-I/ruberoid(28228):  stix-json 5520251617769.000000     100503us     185185us
-I/ruberoid(28228): /sdcard/Download/shootout/data.json: length 17333
-I/ruberoid(28228):      gason 3754.333493        *326us*         *31us*
-I/ruberoid(28228):      vjson 3754.333471        338us         53us
-I/ruberoid(28228):     sajson 3754.333493        333us         57us
-I/ruberoid(28228):  stix-json 3754.333493        517us        336us
-I/ruberoid(28228): /sdcard/Download/shootout/monster.json: length 196473
-I/ruberoid(28228):      gason 34474757.667613       7683us       *1331us*
-I/ruberoid(28228):      vjson 34474757.667621      10381us       2205us
-I/ruberoid(28228):     sajson 34474757.667613       *6742us*       2127us
-I/ruberoid(28228):  stix-json 34474757.667613      12546us    1172294us
+I/ruberoid( 8944): /sdcard/Download/shootout/big.json: length 6072200
+I/ruberoid( 8944):      gason      66269us        561us 	(5520251617769.000000)
+I/ruberoid( 8944):      vjson      59052us       1058us 	(5520251617769.000000)
+I/ruberoid( 8944):     sajson      75240us       1573us 	(5520251617769.000000)
+I/ruberoid( 8944):  rapidjson      82948us        808us 	(5520251617769.000000)
+I/ruberoid( 8944): /sdcard/Download/shootout/data.json: length 17333
+I/ruberoid( 8944):      gason        328us         32us 	(3754.333493)
+I/ruberoid( 8944):      vjson        316us         54us 	(3754.333471)
+I/ruberoid( 8944):     sajson        291us         55us 	(3754.333493)
+I/ruberoid( 8944):  rapidjson        386us         48us 	(3754.333493)
+I/ruberoid( 8944): /sdcard/Download/shootout/monster.json: length 196473
+I/ruberoid( 8944):      gason       6330us       1342us 	(34474757.667613)
+I/ruberoid( 8944):      vjson       9481us       2236us 	(34474757.667621)
+I/ruberoid( 8944):     sajson       6400us       1971us 	(34474757.667613)
+I/ruberoid( 8944):  rapidjson       7464us       1745us 	(34474757.667613)
 ```
 
 ## License
