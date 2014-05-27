@@ -122,6 +122,8 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 
 	bool separator = true;
 
+	*endptr = s;
+	
 	while (*s) {
 		JsonValue o;
 
