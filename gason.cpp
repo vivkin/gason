@@ -206,6 +206,9 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 						*endptr = s;
 						return JSON_PARSE_BAD_STRING;
 					}
+				} else if (iscntrl(c)) {
+					*endptr = s;
+					return JSON_PARSE_BAD_STRING;
 				} else if (c == '"') {
 					*it = 0;
 					++s;

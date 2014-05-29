@@ -22,7 +22,6 @@ gason is **not strict** parser:
 * Source buffer can contain more than one value (first will be parsed; pointer to the rest returns)
 * Single number, string or identifier will be succesfully parsed
 * Trailing `,` before closing `]` or `}` is not an error
-* Control characters in strings are allowed
 
 gason is **destructive** parser, i.e. you **source buffer** will be **modified**! Strings stored as pointers to source buffer, where closing `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects are represented as single linked list (without random access).
 
