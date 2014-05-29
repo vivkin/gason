@@ -1,71 +1,95 @@
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
-#ifndef _WIN32
-#ifndef NDEBUG
+#include <errno.h>
+#if !defined(_WIN32) && !defined(NDEBUG)
 #include <execinfo.h>
 #include <signal.h>
 #endif
-#include <sys/time.h>
-#endif
 #include "gason.h"
 
-#define INDENT 4
+const int SHIFT_WIDTH = 4;
 
-void print_json(JsonValue o, int indent = 0)
-{
-	switch (o.getTag())
-	{
-		case JSON_TAG_NUMBER:
-			fprintf(stdout, "%f", o.toNumber());
+void dumpString(const char *s) {
+	fputc('"', stdout);
+	while (*s) {
+		int c = *s++;
+		switch (c) {
+		case '\b':
+			fprintf(stdout, "\\b");
 			break;
-		case JSON_TAG_BOOL:
-			fprintf(stdout, o.toBool() ? "true" : "false");
+		case '\f':
+			fprintf(stdout, "\\f");
 			break;
-		case JSON_TAG_STRING:
-			fprintf(stdout, "\"%s\"", o.toString());
+		case '\n':
+			fprintf(stdout, "\\n");
 			break;
-		case JSON_TAG_ARRAY:
-			if (!o.toNode())
-			{
-				fprintf(stdout, "[]");
-				break;
-			}
-			fprintf(stdout, "[\n");
-			for (auto i : o)
-			{
-				fprintf(stdout, "%*s", indent + INDENT, "");
-				print_json(i->value, indent + INDENT);
-				fprintf(stdout, i->next ? ",\n" : "\n");
-			}
-			fprintf(stdout, "%*s]", indent, "");
+		case '\r':
+			fprintf(stdout, "\\r");
 			break;
-		case JSON_TAG_OBJECT:
-			if (!o.toNode())
-			{
-				fprintf(stdout, "{}");
-				break;
-			}
-			fprintf(stdout, "{\n");
-			for (auto i : o)
-			{
-				fprintf(stdout, "%*s" "\"%s\": ", indent + INDENT, "", i->key);
-				print_json(i->value, indent + INDENT);
-				fprintf(stdout, i->next ? ",\n" : "\n");
-			}
-			fprintf(stdout, "%*s}", indent, "");
+		case '\t':
+			fprintf(stdout, "\\t");
 			break;
-		case JSON_TAG_NULL:
-			fprintf(stdout, "null");
+		case '\\':
+			fprintf(stdout, "\\\\");
+			break;
+		case '"':
+			fprintf(stdout, "\\\"");
 			break;
 		default:
-			fprintf(stderr, "error: unknown value tag %d\n", o.getTag());
-			exit(EXIT_FAILURE);
+			fputc(c, stdout);
+		}
+	}
+	fprintf(stdout, "%s\"", s);
+}
+
+void dumpValue(JsonValue o, int indent = 0) {
+	switch (o.getTag()) {
+	case JSON_TAG_NUMBER:
+		fprintf(stdout, "%f", o.toNumber());
+		break;
+	case JSON_TAG_BOOL:
+		fprintf(stdout, o.toBool() ? "true" : "false");
+		break;
+	case JSON_TAG_STRING:
+		dumpString(o.toString());
+		break;
+	case JSON_TAG_ARRAY:
+		if (!o.toNode()) {
+			fprintf(stdout, "[]");
+			break;
+		}
+		fprintf(stdout, "[\n");
+		for (auto i : o) {
+			fprintf(stdout, "%*s", indent + SHIFT_WIDTH, "");
+			dumpValue(i->value, indent + SHIFT_WIDTH);
+			fprintf(stdout, i->next ? ",\n" : "\n");
+		}
+		fprintf(stdout, "%*s]", indent, "");
+		break;
+	case JSON_TAG_OBJECT:
+		if (!o.toNode()) {
+			fprintf(stdout, "{}");
+			break;
+		}
+		fprintf(stdout, "{\n");
+		for (auto i : o) {
+			fprintf(stdout, "%*s", indent + SHIFT_WIDTH, "");
+			dumpString(i->key);
+			fprintf(stdout, ": ");
+			dumpValue(i->value, indent + SHIFT_WIDTH);
+			fprintf(stdout, i->next ? ",\n" : "\n");
+		}
+		fprintf(stdout, "%*s}", indent, "");
+		break;
+	case JSON_TAG_NULL:
+		fprintf(stdout, "null");
+		break;
 	}
 }
 
-void print_error(const char *filename, JsonParseStatus status, char *endptr, char *source, size_t size)
-{
-	const char *status2str[] = {
+void printError(const char *filename, JsonParseStatus status, char *endptr, char *source, size_t size) {
+	static const char *status2string[] = {
 		"JSON_PARSE_OK",
 		"JSON_PARSE_BAD_NUMBER",
 		"JSON_PARSE_BAD_STRING",
@@ -75,111 +99,99 @@ void print_error(const char *filename, JsonParseStatus status, char *endptr, cha
 		"JSON_PARSE_MISMATCH_BRACKET",
 		"JSON_PARSE_UNEXPECTED_CHARACTER",
 		"JSON_PARSE_UNQUOTED_KEY",
-		"JSON_PARSE_BREAKING_BAD"
-	};
+		"JSON_PARSE_BREAKING_BAD"};
+
 	char *s = endptr;
-	while (s != source && *s != '\n') --s;
-	if (s != endptr && s != source) ++s;
-	int line = 0;
-	for (char *i = s; i != source; --i)
-	{
-		if (*i == '\n')
-		{
-			++line;
+	while (s != source && *s != '\n')
+		--s;
+	if (s != endptr && s != source)
+		++s;
+
+	int lineno = 0;
+	for (char *it = s; it != source; --it) {
+		if (*it == '\n') {
+			++lineno;
 		}
 	}
+
 	int column = (int)(endptr - s);
-	fprintf(stderr, "%s:%d:%d: error %s\n", filename, line + 1, column + 1, status2str[status]);
-	while (s != source + size && *s != '\n')
-	{
+
+	fprintf(stderr, "%s:%d:%d: error %s\n", filename, lineno + 1, column + 1, status2string[status]);
+
+	while (s != source + size && *s != '\n') {
 		int c = *s++;
-		switch (c)
-		{
-			case '\b': fprintf(stderr, "\\b"); column += 1; break;
-			case '\f': fprintf(stderr, "\\f"); column += 1; break;
-			case '\n': fprintf(stderr, "\\n"); column += 1; break;
-			case '\r': fprintf(stderr, "\\r"); column += 1; break;
-			case '\t': fprintf(stderr, "%*s", INDENT, ""); column += INDENT - 1; break;
-			case 0: fprintf(stderr, "\""); break;
-			default: fprintf(stderr, "%c", c);
+		switch (c) {
+		case '\b':
+			fprintf(stderr, "\\b");
+			column += 1;
+			break;
+		case '\f':
+			fprintf(stderr, "\\f");
+			column += 1;
+			break;
+		case '\n':
+			fprintf(stderr, "\\n");
+			column += 1;
+			break;
+		case '\r':
+			fprintf(stderr, "\\r");
+			column += 1;
+			break;
+		case '\t':
+			fprintf(stderr, "%*s", SHIFT_WIDTH, "");
+			column += SHIFT_WIDTH - 1;
+			break;
+		case '\0':
+			fprintf(stderr, "\"");
+			break;
+		default:
+			fputc(c, stderr);
 		}
 	}
+
 	fprintf(stderr, "\n%*s\n", column + 1, "^");
 }
 
-unsigned long long now()
-{
-#ifndef _WIN32
-	timeval tv;
-	gettimeofday(&tv, nullptr);
-	return tv.tv_sec * 1000000ull + tv.tv_usec;
-#else
-	return 0;
-#endif
-}
-
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 #if !defined(_WIN32) && !defined(NDEBUG)
-	auto abort_handler = [](int)
-	{
-		void *callstack[16];
-		int size = backtrace(callstack, sizeof(callstack) / sizeof(callstack[0]));
-		char **names = backtrace_symbols(callstack, size);
+	signal(SIGABRT, [](int) {
+		void *callstack[64];
+		int size = backtrace(callstack, arraySize(callstack));
+		char **strings = backtrace_symbols(callstack, size);
 		for (int i = 0; i < size; ++i)
-		{
-			fprintf(stderr, "%s\n", names[i]);
-		}
-		free(names);
+			fprintf(stderr, "%s\n", strings[i]);
+		free(strings);
 		exit(EXIT_FAILURE);
-	};
-	signal(SIGABRT, abort_handler);
+	});
 #endif
 
-	const char *filename = "<stdin>";
-	FILE *fp = stdin;
-	char *source = nullptr;
-	size_t source_size = 0;
-	size_t buffer_size = 0;
-	if (argc > 1 && !(argv[1][0] == '-' && argv[1][1] == 0))
-	{
-		filename = argv[1];
-		fp = fopen(filename, "rb");
-		if (!fp)
-		{
-			fprintf(stderr, "error: %s: no such file\nusage: json-pretty-print [fileanme]\n", filename);
-			exit(EXIT_FAILURE);
-		}
-		fseek(fp, 0, SEEK_END);
-		buffer_size = ftell(fp) + 1;
-		fseek(fp, 0, SEEK_SET);
-		source = (char *)malloc(buffer_size);
+	FILE *fp = (argc > 1 && strcmp(argv[1], "-")) ? fopen(argv[1], "rb") : stdin;
+	if (!fp) {
+		fprintf(stderr, "%s: %s: %s\n", argv[0], argv[1], strerror(errno));
+		exit(EXIT_FAILURE);
 	}
-	while (!feof(fp))
-	{
-		if (source_size + 1 >= buffer_size)
-		{
-			buffer_size = buffer_size < BUFSIZ ? BUFSIZ : buffer_size * 2;
-			source = (char *)realloc(source, buffer_size);
+	char *source = nullptr;
+	size_t sourceSize = 0;
+	size_t bufferSize = 0;
+	while (!feof(fp)) {
+		if (sourceSize + 1 >= bufferSize) {
+			bufferSize = bufferSize < BUFSIZ ? BUFSIZ : bufferSize * 2;
+			source = (char *)realloc(source, bufferSize);
 		}
-		source_size += fread(source + source_size, 1, buffer_size - source_size - 1, fp);
+		sourceSize += fread(source + sourceSize, 1, bufferSize - sourceSize - 1, fp);
 	}
 	fclose(fp);
-	source[source_size] = 0;
+	source[sourceSize] = 0;
 
 	char *endptr;
 	JsonValue value;
 	JsonAllocator allocator;
-	unsigned long long t = now();
 	JsonParseStatus status = jsonParse(source, &endptr, &value, allocator);
-	if (status != JSON_PARSE_OK)
-	{
-		print_error(filename, status, endptr, source, source_size);
+	if (status != JSON_PARSE_OK) {
+		printError((argc > 1 && strcmp(argv[1], "-")) ? argv[1] : "-stdin-", status, endptr, source, sourceSize);
 		exit(EXIT_FAILURE);
 	}
-	fprintf(stderr, "%s: buffer size %zd, length %zd, parsed %zd bytes for %lluus\n", filename, buffer_size, source_size, endptr - source, now() - t);
-
-	print_json(value);
+	dumpValue(value);
 	fprintf(stdout, "\n");
 
 	return 0;
