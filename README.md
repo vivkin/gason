@@ -43,11 +43,11 @@ JsonValue value;
 JsonAllocator allocator;
 JsonParseStatus status = jsonParse(source, &endptr, &value, allocator);
 if (status != JSON_PARSE_OK) {
-	fprintf(stderr, "error at %zd, status: %d\n", endptr - source, (int)status);
+	fprintf(stderr, "error at %zd, status: %d\n", endptr - source, status);
 	exit(EXIT_FAILURE);
 }
 ```
-All **values** will become **invalid** when **allocator** be **destroyed**. For print verbose error message see `print_error` function in [pretty-print.cpp](pretty-print.cpp).
+All **values** will become **invalid** when **allocator** be **destroyed**. For print verbose error message see `printError` function in [pretty-print.cpp](pretty-print.cpp).
 
 ### Iteration
 ```cpp
