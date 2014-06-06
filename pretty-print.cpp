@@ -55,6 +55,9 @@ void dumpValue(JsonValue o, int indent = 0) {
 		dumpString(o.toString());
 		break;
 	case JSON_TAG_ARRAY:
+		// It is not necessary to use o.toNode() to check if an array or object
+		// is empty before iterating over its members, we do it here to allow
+		// nicer pretty printing.
 		if (!o.toNode()) {
 			fprintf(stdout, "[]");
 			break;
