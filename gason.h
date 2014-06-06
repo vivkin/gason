@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 #include <assert.h>
 
 #define JSON_VALUE_PAYLOAD_MASK 0x00007FFFFFFFFFFFULL
