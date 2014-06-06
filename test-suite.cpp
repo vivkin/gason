@@ -124,7 +124,7 @@ int main() {
 #if !defined(_WIN32) && !defined(NDEBUG)
 	signal(SIGABRT, [](int) {
 		void *callstack[64];
-		int size = backtrace(callstack, arraySize(callstack));
+		int size = backtrace(callstack, sizeof(callstack)/sizeof(callstack[0]));
 		char **strings = backtrace_symbols(callstack, size);
 		for (int i = 0; i < size; ++i)
 			fprintf(stderr, "%s\n", strings[i]);
