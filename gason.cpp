@@ -268,6 +268,7 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 			tails[pos] = nullptr;
 			tags[pos] = JSON_TAG_ARRAY;
 			keys[pos] = nullptr;
+			separator = true;
 			continue;
 		case '{':
 			if (++pos == JSON_STACK_SIZE)
@@ -275,6 +276,7 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 			tails[pos] = nullptr;
 			tags[pos] = JSON_TAG_OBJECT;
 			keys[pos] = nullptr;
+			separator = true;
 			continue;
 		case ':':
 			if (separator || keys[pos] == nullptr)
