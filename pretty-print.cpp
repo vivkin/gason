@@ -55,6 +55,9 @@ void dumpValue(JsonValue o, int indent = 0) {
 		dumpString(o.toString());
 		break;
 	case JSON_TAG_ARRAY:
+		// It is not necessary to use o.toNode() to check if an array or object
+		// is empty before iterating over its members, we do it here to allow
+		// nicer pretty printing.
 		if (!o.toNode()) {
 			fprintf(stdout, "[]");
 			break;
@@ -156,7 +159,7 @@ int main(int argc, char **argv) {
 #if !defined(_WIN32) && !defined(NDEBUG)
 	signal(SIGABRT, [](int) {
 		void *callstack[64];
-		int size = backtrace(callstack, arraySize(callstack));
+		int size = backtrace(callstack, sizeof(callstack)/sizeof(callstack[0]));
 		char **strings = backtrace_symbols(callstack, size);
 		for (int i = 0; i < size; ++i)
 			fprintf(stderr, "%s\n", strings[i]);
