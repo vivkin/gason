@@ -258,6 +258,8 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 				return JSON_PARSE_STACK_UNDERFLOW;
 			if (tags[pos] != JSON_TAG_OBJECT)
 				return JSON_PARSE_MISMATCH_BRACKET;
+			if (keys[pos] != nullptr)
+				return JSON_PARSE_UNEXPECTED_CHARACTER;
 			o = listToValue(JSON_TAG_OBJECT, tails[pos--]);
 			break;
 		case '[':

@@ -36,6 +36,8 @@ struct {
 	  {true, R"*(["Illegal backslash escape: \017"])*"},
 	  {true, R"*([[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]])*"},
 	  {false, R"*({"Missing colon" null})*"},
+	  {true, R"*({"Unfinished object"})*"},
+	  {true, R"*({"Unfinished object 2" null "x"})*"},
 	  {true, R"*({"Double colon":: null})*"},
 	  {true, R"*({"Comma instead of colon", null})*"},
 	  {true, R"*(["Colon instead of comma": false])*"},
