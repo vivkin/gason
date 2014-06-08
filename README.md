@@ -99,7 +99,7 @@ gason stores values using NaN-boxing technique. By [IEEE-754](http://en.wikipedi
                  tag |
                      payload
 ```
-48 bits payload [enough](http://en.wikipedia.org/wiki/X86-64#Virtual_address_space_details) for store any pointer on x64.
+48 bits payload [enough](http://en.wikipedia.org/wiki/X86-64#Virtual_address_space_details) for store any pointer on x64. Numbers use zero tag, so infinity and nan are accessible.
 
 ### Memory management
 JsonAllocator allocates big blocks of memory and use pointer bumping inside theese blocks for smaller allocations. Size of block can be tuned by *JSON_ZONE_SIZE* constant (default 4 KiB).
@@ -107,7 +107,7 @@ JsonAllocator allocates big blocks of memory and use pointer bumping inside thee
 ### Parser internals
 > [05.11.13, 2:52:33] Олег Литвин: о нихуя там свитч кейс на стеройдах!
 
-Internally in `json_parse` function nested arrays/objects stored in array of circulary linked list of `JsonNode`. Size of that array can be tuned by *JSON_STACK_SIZE* constant (default 32).
+Internally in `jsonParse` function nested arrays/objects stored in array of circulary linked list of `JsonNode`. Size of that array can be tuned by *JSON_STACK_SIZE* constant (default 32).
 
 ## Performance
 
