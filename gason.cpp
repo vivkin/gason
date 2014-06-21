@@ -66,8 +66,10 @@ static double string2double(char *s, char **endptr) {
 		++s;
 
 		double fraction = 1;
-		while (isdigit(*s))
-			fraction *= 0.1, result += (*s++ - '0') * fraction;
+		while (isdigit(*s)) {
+			fraction *= 0.1;
+			result += (*s++ - '0') * fraction;
+		}
 	}
 
 	if (*s == 'e' || *s == 'E') {
