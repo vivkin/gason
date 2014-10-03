@@ -18,11 +18,11 @@ double traverse_gason(JsonValue o)
 	double x = 0;
 	switch (o.getTag())
 	{
-		case JSON_TAG_NUMBER:
+		case JSON_NUMBER:
 			x += o.toNumber();
 			break;
-		case JSON_TAG_ARRAY:
-		case JSON_TAG_OBJECT:
+		case JSON_ARRAY:
+		case JSON_OBJECT:
 			for (auto i : o)
 			{
 				x += traverse_gason(i->value);
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 			auto parse_time = now() - t;
 			if (status != JSON_OK)
 			{
-				LOG("error: gason: %d\n", (int)status);
+				LOG("error: gason: %s\n", jsonStrError(status));
 			}
 			t = now();
 			double x = traverse_gason(value);

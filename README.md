@@ -41,9 +41,9 @@ char *source = get_useless_facebook_response(); // or read file, whatever
 char *endptr;
 JsonValue value;
 JsonAllocator allocator;
-JsonParseStatus status = jsonParse(source, &endptr, &value, allocator);
-if (status != JSON_PARSE_OK) {
-	fprintf(stderr, "error at %zd, status: %d\n", endptr - source, status);
+int status = jsonParse(source, &endptr, &value, allocator);
+if (status != JSON_OK) {
+	fprintf(stderr, "%s at %zd\n", jsonStrError(status), endptr - source);
 	exit(EXIT_FAILURE);
 }
 ```
@@ -54,28 +54,28 @@ All **values** will become **invalid** when **allocator** be **destroyed**. For 
 double sum_and_print(JsonValue o) {
 	double sum = 0;
 	switch (o.getTag()) {
-	case JSON_TAG_NUMBER:
+	case JSON_NUMBER:
 		printf("%g\n", o.toNumber());
 		sum += o.toNumber();
 		break;
-	case JSON_TAG_BOOL:
+	case JSON_BOOL:
 		printf("%s\n", o.toBool() ? "true" : "false");
 		break;
-	case JSON_TAG_STRING:
+	case JSON_STRING:
 		printf("\"%s\"\n", o.toString());
 		break;
-	case JSON_TAG_ARRAY:
+	case JSON_ARRAY:
 		for (auto i : o) {
 			sum += sum_and_print(i->value);
 		}
 		break;
-	case JSON_TAG_OBJECT:
+	case JSON_OBJECT:
 		for (auto i : o) {
 			printf("%s = ", i->key);
 			sum += sum_and_print(i->value);
 		}
 		break;
-	case JSON_TAG_NULL:
+	case JSON_NULL:
 		printf("null\n");
 		break;
 	}

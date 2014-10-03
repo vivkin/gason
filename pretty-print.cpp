@@ -45,16 +45,16 @@ void dumpString(const char *s) {
 
 void dumpValue(JsonValue o, int indent = 0) {
 	switch (o.getTag()) {
-	case JSON_TAG_NUMBER:
+	case JSON_NUMBER:
 		fprintf(stdout, "%f", o.toNumber());
 		break;
-	case JSON_TAG_BOOL:
+	case JSON_BOOL:
 		fprintf(stdout, o.toBool() ? "true" : "false");
 		break;
-	case JSON_TAG_STRING:
+	case JSON_STRING:
 		dumpString(o.toString());
 		break;
-	case JSON_TAG_ARRAY:
+	case JSON_ARRAY:
 		// It is not necessary to use o.toNode() to check if an array or object
 		// is empty before iterating over its members, we do it here to allow
 		// nicer pretty printing.
@@ -70,7 +70,7 @@ void dumpValue(JsonValue o, int indent = 0) {
 		}
 		fprintf(stdout, "%*s]", indent, "");
 		break;
-	case JSON_TAG_OBJECT:
+	case JSON_OBJECT:
 		if (!o.toNode()) {
 			fprintf(stdout, "{}");
 			break;
@@ -85,7 +85,7 @@ void dumpValue(JsonValue o, int indent = 0) {
 		}
 		fprintf(stdout, "%*s}", indent, "");
 		break;
-	case JSON_TAG_NULL:
+	case JSON_NULL:
 		fprintf(stdout, "null");
 		break;
 	}
@@ -107,7 +107,7 @@ void printError(const char *filename, int status, char *endptr, char *source, si
 
 	int column = (int)(endptr - s);
 
-	fprintf(stderr, "%s:%d:%d: error %s\n", filename, lineno + 1, column + 1, jsonStrError(status));
+	fprintf(stderr, "%s:%d:%d: %s\n", filename, lineno + 1, column + 1, jsonStrError(status));
 
 	while (s != source + size && *s != '\n') {
 		int c = *s++;

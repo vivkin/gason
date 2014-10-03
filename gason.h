@@ -11,12 +11,12 @@
 #define JSON_VALUE_TAG_SHIFT 47
 
 enum JsonTag {
-	JSON_TAG_NUMBER = 0,
-	JSON_TAG_STRING,
-	JSON_TAG_BOOL,
-	JSON_TAG_ARRAY,
-	JSON_TAG_OBJECT,
-	JSON_TAG_NULL = 0xF
+	JSON_NUMBER = 0,
+	JSON_STRING,
+	JSON_BOOL,
+	JSON_ARRAY,
+	JSON_OBJECT,
+	JSON_NULL = 0xF
 };
 
 struct JsonNode;
@@ -41,26 +41,26 @@ union JsonValue {
 		return (int64_t)ival <= (int64_t)JSON_VALUE_NAN_MASK;
 	}
 	JsonTag getTag() const {
-		return isDouble() ? JSON_TAG_NUMBER : JsonTag((ival >> JSON_VALUE_TAG_SHIFT) & JSON_VALUE_TAG_MASK);
+		return isDouble() ? JSON_NUMBER : JsonTag((ival >> JSON_VALUE_TAG_SHIFT) & JSON_VALUE_TAG_MASK);
 	}
 	uint64_t getPayload() const {
 		assert(!isDouble());
 		return ival & JSON_VALUE_PAYLOAD_MASK;
 	}
 	double toNumber() const {
-		assert(getTag() == JSON_TAG_NUMBER);
+		assert(getTag() == JSON_NUMBER);
 		return fval;
 	}
 	bool toBool() const {
-		assert(getTag() == JSON_TAG_BOOL);
+		assert(getTag() == JSON_BOOL);
 		return (bool)getPayload();
 	}
 	char *toString() const {
-		assert(getTag() == JSON_TAG_STRING);
+		assert(getTag() == JSON_STRING);
 		return (char *)getPayload();
 	}
 	JsonNode *toNode() const {
-		assert(getTag() == JSON_TAG_ARRAY || getTag() == JSON_TAG_OBJECT);
+		assert(getTag() == JSON_ARRAY || getTag() == JSON_OBJECT);
 		return (JsonNode *)getPayload();
 	}
 };

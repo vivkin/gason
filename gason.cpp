@@ -166,7 +166,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
 			}
 			break;
 		case '"':
-			o = JsonValue(JSON_TAG_STRING, s);
+			o = JsonValue(JSON_STRING, s);
 			for (char *it = s; *s; ++it, ++s) {
 				int c = *it = *s;
 				if (c == '\\') {
@@ -237,7 +237,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
 			}
 			if (!isdelim(*s))
 				return JSON_BAD_IDENTIFIER;
-			o = JsonValue(JSON_TAG_BOOL, (void *)true);
+			o = JsonValue(JSON_BOOL, (void *)true);
 			break;
 		case 'f':
 			for (const char *it = "alse"; *it; ++it, ++s) {
@@ -246,7 +246,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
 			}
 			if (!isdelim(*s))
 				return JSON_BAD_IDENTIFIER;
-			o = JsonValue(JSON_TAG_BOOL, (void *)false);
+			o = JsonValue(JSON_BOOL, (void *)false);
 			break;
 		case 'n':
 			for (const char *it = "ull"; *it; ++it, ++s) {
@@ -259,24 +259,24 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
 		case ']':
 			if (pos == -1)
 				return JSON_STACK_UNDERFLOW;
-			if (tags[pos] != JSON_TAG_ARRAY)
+			if (tags[pos] != JSON_ARRAY)
 				return JSON_MISMATCH_BRACKET;
-			o = listToValue(JSON_TAG_ARRAY, tails[pos--]);
+			o = listToValue(JSON_ARRAY, tails[pos--]);
 			break;
 		case '}':
 			if (pos == -1)
 				return JSON_STACK_UNDERFLOW;
-			if (tags[pos] != JSON_TAG_OBJECT)
+			if (tags[pos] != JSON_OBJECT)
 				return JSON_MISMATCH_BRACKET;
 			if (keys[pos] != nullptr)
 				return JSON_UNEXPECTED_CHARACTER;
-			o = listToValue(JSON_TAG_OBJECT, tails[pos--]);
+			o = listToValue(JSON_OBJECT, tails[pos--]);
 			break;
 		case '[':
 			if (++pos == JSON_STACK_SIZE)
 				return JSON_STACK_OVERFLOW;
 			tails[pos] = nullptr;
-			tags[pos] = JSON_TAG_ARRAY;
+			tags[pos] = JSON_ARRAY;
 			keys[pos] = nullptr;
 			separator = true;
 			continue;
@@ -284,7 +284,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
 			if (++pos == JSON_STACK_SIZE)
 				return JSON_STACK_OVERFLOW;
 			tails[pos] = nullptr;
-			tags[pos] = JSON_TAG_OBJECT;
+			tags[pos] = JSON_OBJECT;
 			keys[pos] = nullptr;
 			separator = true;
 			continue;
@@ -310,9 +310,9 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
 			return JSON_OK;
 		}
 
-		if (tags[pos] == JSON_TAG_OBJECT) {
+		if (tags[pos] == JSON_OBJECT) {
 			if (!keys[pos]) {
-				if (o.getTag() != JSON_TAG_STRING)
+				if (o.getTag() != JSON_STRING)
 					return JSON_UNQUOTED_KEY;
 				keys[pos] = o.toString();
 				continue;
