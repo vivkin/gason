@@ -11,101 +11,101 @@
 #define JSON_VALUE_TAG_SHIFT 47
 
 enum JsonTag {
-	JSON_NUMBER = 0,
-	JSON_STRING,
-	JSON_BOOL,
-	JSON_ARRAY,
-	JSON_OBJECT,
-	JSON_NULL = 0xF
+    JSON_NUMBER = 0,
+    JSON_STRING,
+    JSON_BOOL,
+    JSON_ARRAY,
+    JSON_OBJECT,
+    JSON_NULL = 0xF
 };
 
 struct JsonNode;
 
 union JsonValue {
-	uint64_t ival;
-	double fval;
+    uint64_t ival;
+    double fval;
 
-	JsonValue()
-		: ival(JSON_VALUE_NULL) {
-	}
-	JsonValue(double x)
-		: fval(x) {
-	}
-	JsonValue(JsonTag tag, void *p) {
-		uint64_t x = (uint64_t)p;
-		assert(tag <= JSON_VALUE_TAG_MASK);
-		assert(x <= JSON_VALUE_PAYLOAD_MASK);
-		ival = JSON_VALUE_NAN_MASK | ((uint64_t)tag << JSON_VALUE_TAG_SHIFT) | x;
-	}
-	bool isDouble() const {
-		return (int64_t)ival <= (int64_t)JSON_VALUE_NAN_MASK;
-	}
-	JsonTag getTag() const {
-		return isDouble() ? JSON_NUMBER : JsonTag((ival >> JSON_VALUE_TAG_SHIFT) & JSON_VALUE_TAG_MASK);
-	}
-	uint64_t getPayload() const {
-		assert(!isDouble());
-		return ival & JSON_VALUE_PAYLOAD_MASK;
-	}
-	double toNumber() const {
-		assert(getTag() == JSON_NUMBER);
-		return fval;
-	}
-	bool toBool() const {
-		assert(getTag() == JSON_BOOL);
-		return (bool)getPayload();
-	}
-	char *toString() const {
-		assert(getTag() == JSON_STRING);
-		return (char *)getPayload();
-	}
-	JsonNode *toNode() const {
-		assert(getTag() == JSON_ARRAY || getTag() == JSON_OBJECT);
-		return (JsonNode *)getPayload();
-	}
+    JsonValue()
+        : ival(JSON_VALUE_NULL) {
+    }
+    JsonValue(double x)
+        : fval(x) {
+    }
+    JsonValue(JsonTag tag, void *p) {
+        uint64_t x = (uint64_t)p;
+        assert(tag <= JSON_VALUE_TAG_MASK);
+        assert(x <= JSON_VALUE_PAYLOAD_MASK);
+        ival = JSON_VALUE_NAN_MASK | ((uint64_t)tag << JSON_VALUE_TAG_SHIFT) | x;
+    }
+    bool isDouble() const {
+        return (int64_t)ival <= (int64_t)JSON_VALUE_NAN_MASK;
+    }
+    JsonTag getTag() const {
+        return isDouble() ? JSON_NUMBER : JsonTag((ival >> JSON_VALUE_TAG_SHIFT) & JSON_VALUE_TAG_MASK);
+    }
+    uint64_t getPayload() const {
+        assert(!isDouble());
+        return ival & JSON_VALUE_PAYLOAD_MASK;
+    }
+    double toNumber() const {
+        assert(getTag() == JSON_NUMBER);
+        return fval;
+    }
+    bool toBool() const {
+        assert(getTag() == JSON_BOOL);
+        return (bool)getPayload();
+    }
+    char *toString() const {
+        assert(getTag() == JSON_STRING);
+        return (char *)getPayload();
+    }
+    JsonNode *toNode() const {
+        assert(getTag() == JSON_ARRAY || getTag() == JSON_OBJECT);
+        return (JsonNode *)getPayload();
+    }
 };
 
 struct JsonNode {
-	JsonValue value;
-	JsonNode *next;
-	char *key;
+    JsonValue value;
+    JsonNode *next;
+    char *key;
 };
 
 struct JsonIterator {
-	JsonNode *p;
+    JsonNode *p;
 
-	void operator++() {
-		p = p->next;
-	}
-	bool operator!=(const JsonIterator &x) const {
-		return p != x.p;
-	}
-	JsonNode *operator*() const {
-		return p;
-	}
-	JsonNode *operator->() const {
-		return p;
-	}
+    void operator++() {
+        p = p->next;
+    }
+    bool operator!=(const JsonIterator &x) const {
+        return p != x.p;
+    }
+    JsonNode *operator*() const {
+        return p;
+    }
+    JsonNode *operator->() const {
+        return p;
+    }
 };
 
 inline JsonIterator begin(JsonValue o) {
-	return JsonIterator{o.toNode()};
+    return JsonIterator{o.toNode()};
 }
 inline JsonIterator end(JsonValue) {
-	return JsonIterator{nullptr};
+    return JsonIterator{nullptr};
 }
 
-#define JSON_ERRNO_MAP(XX) \
-    XX(OK, "ok") \
-    XX(BAD_NUMBER, "bad number") \
-    XX(BAD_STRING, "bad string") \
-    XX(BAD_IDENTIFIER, "bad identifier") \
-    XX(STACK_OVERFLOW, "stack overflow") \
-    XX(STACK_UNDERFLOW, "stack underflow") \
-    XX(MISMATCH_BRACKET, "mismatch bracket") \
+#define JSON_ERRNO_MAP(XX)                           \
+    XX(OK, "ok")                                     \
+    XX(BAD_NUMBER, "bad number")                     \
+    XX(BAD_STRING, "bad string")                     \
+    XX(BAD_IDENTIFIER, "bad identifier")             \
+    XX(STACK_OVERFLOW, "stack overflow")             \
+    XX(STACK_UNDERFLOW, "stack underflow")           \
+    XX(MISMATCH_BRACKET, "mismatch bracket")         \
     XX(UNEXPECTED_CHARACTER, "unexpected character") \
-    XX(UNQUOTED_KEY, "unquoted key") \
-    XX(BREAKING_BAD, "breaking bad") \
+    XX(UNQUOTED_KEY, "unquoted key")                 \
+    XX(BREAKING_BAD, "breaking bad")
 
 enum JsonErrno {
 #define XX(no, str) JSON_##no,
@@ -116,16 +116,16 @@ enum JsonErrno {
 const char *jsonStrError(int err);
 
 class JsonAllocator {
-	struct Zone {
-		Zone *next;
-		size_t used;
-	} *head = nullptr;
+    struct Zone {
+        Zone *next;
+        size_t used;
+    } *head = nullptr;
 
 public:
     JsonAllocator() = default;
-    JsonAllocator(const JsonAllocator &) = delete; 
+    JsonAllocator(const JsonAllocator &) = delete;
     JsonAllocator &operator=(const JsonAllocator &) = delete;
-    JsonAllocator(JsonAllocator &&x): head(x.head) {
+    JsonAllocator(JsonAllocator &&x) : head(x.head) {
         x.head = nullptr;
     }
     JsonAllocator &operator=(JsonAllocator &&x) {
@@ -133,9 +133,9 @@ public:
         x.head = nullptr;
         return *this;
     }
-	~JsonAllocator();
-	void *allocate(size_t size);
-	void deallocate();
+    ~JsonAllocator();
+    void *allocate(size_t size);
+    void deallocate();
 };
 
 int jsonParse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator);

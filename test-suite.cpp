@@ -14,49 +14,49 @@
 #include "gason.h"
 
 struct {
-	bool f;
-	const char *s;
+    bool f;
+    const char *s;
 } SUITE[] = {
-	  {false, R"*(1234567890)*"},
-	  {false, R"*("A JSON payload should be an object or array, not a string.")*"},
-	  {true, R"*(["Unclosed array")*"},
-	  {true, R"*({unquoted_key: "keys must be quoted"})*"},
-	  {false, R"*(["extra comma",])*"},
-	  {true, R"*(["double extra comma",,])*"},
-	  {true, R"*([   , "<-- missing value"])*"},
-	  {true, R"*([ 1 [   , "<-- missing inner value 1"]])*"},
-	  {true, R"*({ "1" [   , "<-- missing inner value 2"]})*"},
-	  {true, R"*([ "1" {   , "<-- missing inner value 3":"x"}])*"},
-	  {false, R"*(["Comma after the close"],)*"},
-	  {false, R"*({"Extra comma": true,})*"},
-	  {false, R"*({"Extra value after close": true} "misplaced quoted value")*"},
-	  {true, R"*({"Illegal expression": 1 + 2})*"},
-	  {true, R"*({"Illegal invocation": alert()})*"},
-	  {false, R"*({"Numbers cannot have leading zeroes": 013})*"},
-	  {true, R"*({"Numbers cannot be hex": 0x14})*"},
-	  {true, R"*(["Illegal backslash escape: \x15"])*"},
-	  {true, R"*([\naked])*"},
-	  {true, R"*(["Illegal backslash escape: \017"])*"},
-	  {true, R"*([[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]])*"},
-	  {false, R"*({"Missing colon" null})*"},
-	  {true, R"*({"Unfinished object"})*"},
-	  {true, R"*({"Unfinished object 2" null "x"})*"},
-	  {true, R"*({"Double colon":: null})*"},
-	  {true, R"*({"Comma instead of colon", null})*"},
-	  {true, R"*(["Colon instead of comma": false])*"},
-	  {true, R"*(["Bad value", truth])*"},
-	  {true, R"*(['single quote'])*"},
-	  {true, R"*(["	tab	character	in	string	"])*"},
-	  {true, R"*(["line
+      {false, R"*(1234567890)*"},
+      {false, R"*("A JSON payload should be an object or array, not a string.")*"},
+      {true, R"*(["Unclosed array")*"},
+      {true, R"*({unquoted_key: "keys must be quoted"})*"},
+      {false, R"*(["extra comma",])*"},
+      {true, R"*(["double extra comma",,])*"},
+      {true, R"*([   , "<-- missing value"])*"},
+      {true, R"*([ 1 [   , "<-- missing inner value 1"]])*"},
+      {true, R"*({ "1" [   , "<-- missing inner value 2"]})*"},
+      {true, R"*([ "1" {   , "<-- missing inner value 3":"x"}])*"},
+      {false, R"*(["Comma after the close"],)*"},
+      {false, R"*({"Extra comma": true,})*"},
+      {false, R"*({"Extra value after close": true} "misplaced quoted value")*"},
+      {true, R"*({"Illegal expression": 1 + 2})*"},
+      {true, R"*({"Illegal invocation": alert()})*"},
+      {false, R"*({"Numbers cannot have leading zeroes": 013})*"},
+      {true, R"*({"Numbers cannot be hex": 0x14})*"},
+      {true, R"*(["Illegal backslash escape: \x15"])*"},
+      {true, R"*([\naked])*"},
+      {true, R"*(["Illegal backslash escape: \017"])*"},
+      {true, R"*([[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]])*"},
+      {false, R"*({"Missing colon" null})*"},
+      {true, R"*({"Unfinished object"})*"},
+      {true, R"*({"Unfinished object 2" null "x"})*"},
+      {true, R"*({"Double colon":: null})*"},
+      {true, R"*({"Comma instead of colon", null})*"},
+      {true, R"*(["Colon instead of comma": false])*"},
+      {true, R"*(["Bad value", truth])*"},
+      {true, R"*(['single quote'])*"},
+      {true, R"*(["	tab	character	in	string	"])*"},
+      {true, R"*(["line
 break"])*"},
-	  {true, R"*(["line\
+      {true, R"*(["line\
 break"])*"},
-	  {false, R"*([0e])*"},
-	  {false, R"*([0e+])*"},
-	  {true, R"*([0e+-1])*"},
-	  {true, R"*({"Comma instead if closing brace": true,)*"},
-	  {true, R"*(["mismatch"})*"},
-	  {false, R"*(
+      {false, R"*([0e])*"},
+      {false, R"*([0e+])*"},
+      {true, R"*([0e+-1])*"},
+      {true, R"*({"Comma instead if closing brace": true,)*"},
+      {true, R"*(["mismatch"})*"},
+      {false, R"*(
 [
     "JSON Test Pattern pass1",
     {"object with 1 member":["array with 1 element"]},
@@ -115,19 +115,19 @@ break"])*"},
 1e-1,
 1e00,2e+00,2e-00
 ,"rosebud"])*"},
-	  {false, R"*([[[[[[[[[[[[[[[[[[["Not too deep"]]]]]]]]]]]]]]]]]]])*"},
-	  {false, R"*({
+      {false, R"*([[[[[[[[[[[[[[[[[[["Not too deep"]]]]]]]]]]]]]]]]]]])*"},
+      {false, R"*({
     "JSON Test Pattern pass3": {
         "The outermost value": "must be an object or array.",
         "In this test": "It is an object."
     }
 }
 )*"},
-	  {false, R"*([1, 2, "хУй", [[0.5], 7.11, 13.19e+1], "ba\u0020r", [ [ ] ], -0, -.666, [true, null], {"WAT?!": false}])*"}};
+      {false, R"*([1, 2, "хУй", [[0.5], 7.11, 13.19e+1], "ba\u0020r", [ [ ] ], -0, -.666, [true, null], {"WAT?!": false}])*"}};
 
 int main() {
 #if !defined(_WIN32) && !defined(NDEBUG)
-	signal(SIGABRT, [](int) {
+    signal(SIGABRT, [](int) {
 		void *callstack[64];
 		int size = backtrace(callstack, sizeof(callstack)/sizeof(callstack[0]));
 		char **strings = backtrace_symbols(callstack, size);
@@ -135,26 +135,26 @@ int main() {
 			fprintf(stderr, "%s\n", strings[i]);
 		free(strings);
 		exit(EXIT_FAILURE);
-	});
+    });
 #endif
 
-	char *endptr;
-	JsonValue value;
-	JsonAllocator allocator;
-	int passed = 0;
-	int count = 0;
-	for (auto t : SUITE) {
-		char *source = strdup(t.s);
-		int status = jsonParse(source, &endptr, &value, allocator);
-		free(source);
-		if (t.f ^ (status == JSON_OK)) {
-			++passed;
-		} else {
-			LOG("%d: must be %s: %s\n", count, t.f ? "fail" : "pass", t.s);
-		}
-		++count;
-	}
-	LOG("%d/%d\n", passed, count);
+    char *endptr;
+    JsonValue value;
+    JsonAllocator allocator;
+    int passed = 0;
+    int count = 0;
+    for (auto t : SUITE) {
+        char *source = strdup(t.s);
+        int status = jsonParse(source, &endptr, &value, allocator);
+        free(source);
+        if (t.f ^ (status == JSON_OK)) {
+            ++passed;
+        } else {
+            LOG("%d: must be %s: %s\n", count, t.f ? "fail" : "pass", t.s);
+        }
+        ++count;
+    }
+    LOG("%d/%d\n", passed, count);
 
-	return 0;
+    return 0;
 }

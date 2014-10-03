@@ -1,9 +1,0 @@
----
-BasedOnStyle:  LLVM
-AccessModifierOffset: -4
-ColumnLimit:     0
-Cpp11BracedListStyle: true
-Standard:        Cpp11
-IndentWidth:     4
-TabWidth:        4
-UseTab:          Always
