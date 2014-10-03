@@ -95,18 +95,25 @@ inline JsonIterator end(JsonValue) {
 	return JsonIterator{nullptr};
 }
 
-enum JsonParseStatus {
-	JSON_PARSE_OK,
-	JSON_PARSE_BAD_NUMBER,
-	JSON_PARSE_BAD_STRING,
-	JSON_PARSE_BAD_IDENTIFIER,
-	JSON_PARSE_STACK_OVERFLOW,
-	JSON_PARSE_STACK_UNDERFLOW,
-	JSON_PARSE_MISMATCH_BRACKET,
-	JSON_PARSE_UNEXPECTED_CHARACTER,
-	JSON_PARSE_UNQUOTED_KEY,
-	JSON_PARSE_BREAKING_BAD
+#define JSON_ERRNO_MAP(XX) \
+    XX(OK, "ok") \
+    XX(BAD_NUMBER, "bad number") \
+    XX(BAD_STRING, "bad string") \
+    XX(BAD_IDENTIFIER, "bad identifier") \
+    XX(STACK_OVERFLOW, "stack overflow") \
+    XX(STACK_UNDERFLOW, "stack underflow") \
+    XX(MISMATCH_BRACKET, "mismatch bracket") \
+    XX(UNEXPECTED_CHARACTER, "unexpected character") \
+    XX(UNQUOTED_KEY, "unquoted key") \
+    XX(BREAKING_BAD, "breaking bad") \
+
+enum JsonErrno {
+#define XX(no, str) JSON_##no,
+    JSON_ERRNO_MAP(XX)
+#undef XX
 };
+
+const char *jsonStrError(int err);
 
 class JsonAllocator {
 	struct Zone {
@@ -120,4 +127,4 @@ public:
 	void deallocate();
 };
 
-JsonParseStatus jsonParse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator);
+int jsonParse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator);

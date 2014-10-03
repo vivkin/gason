@@ -145,9 +145,9 @@ int main() {
 	int count = 0;
 	for (auto t : SUITE) {
 		char *source = strdup(t.s);
-		JsonParseStatus status = jsonParse(source, &endptr, &value, allocator);
+		int status = jsonParse(source, &endptr, &value, allocator);
 		free(source);
-		if (t.f ^ (status == JSON_PARSE_OK)) {
+		if (t.f ^ (status == JSON_OK)) {
 			++passed;
 		} else {
 			LOG("%d: must be %s: %s\n", count, t.f ? "fail" : "pass", t.s);

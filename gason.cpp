@@ -5,6 +5,16 @@
 #define JSON_ZONE_SIZE 4096
 #define JSON_STACK_SIZE 32
 
+const char *jsonStrError(int err) {
+    switch (err) {
+#define XX(no, str) case JSON_##no: return str;
+        JSON_ERRNO_MAP(XX)
+#undef XX
+    default:
+        return "unknown";
+    }
+}
+
 JsonAllocator::~JsonAllocator() {
 	deallocate();
 }
@@ -12,12 +22,10 @@ JsonAllocator::~JsonAllocator() {
 void *JsonAllocator::allocate(size_t size) {
 	size = (size + 7) & ~7;
 
-	if (head) {
-		if (head->used + size <= JSON_ZONE_SIZE) {
-			char *p = (char *)head + head->used;
-			head->used += size;
-			return p;
-		}
+	if (head && head->used + size <= JSON_ZONE_SIZE) {
+        char *p = (char *)head + head->used;
+        head->used += size;
+        return p;
 	}
 
 	size_t allocSize = sizeof(Zone) + size;
@@ -116,7 +124,7 @@ static inline JsonValue listToValue(JsonTag tag, JsonNode *tail) {
 	return JsonValue(tag, nullptr);
 }
 
-JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator) {
+int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator) {
 	JsonNode *tails[JSON_STACK_SIZE];
 	JsonTag tags[JSON_STACK_SIZE];
 	char *keys[JSON_STACK_SIZE];
@@ -139,7 +147,7 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 		case '-':
 			if (!isdigit(*s) && *s != '.') {
 				*endptr = s;
-				return JSON_PARSE_BAD_NUMBER;
+				return JSON_BAD_NUMBER;
 			}
 		case '0':
 		case '1':
@@ -154,7 +162,7 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 			o = JsonValue(string2double(*endptr, &s));
 			if (!isdelim(*s)) {
 				*endptr = s;
-				return JSON_PARSE_BAD_NUMBER;
+				return JSON_BAD_NUMBER;
 			}
 			break;
 		case '"':
@@ -189,7 +197,7 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 						for (int i = 0; i < 4; ++i) {
 							if (!isxdigit(*++s)) {
 								*endptr = s;
-								return JSON_PARSE_BAD_STRING;
+								return JSON_BAD_STRING;
 							}
 							c = c * 16 + char2int(*s);
 						}
@@ -206,11 +214,11 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 						break;
 					default:
 						*endptr = s;
-						return JSON_PARSE_BAD_STRING;
+						return JSON_BAD_STRING;
 					}
 				} else if (iscntrl(c)) {
 					*endptr = s;
-					return JSON_PARSE_BAD_STRING;
+					return JSON_BAD_STRING;
 				} else if (c == '"') {
 					*it = 0;
 					++s;
@@ -219,54 +227,54 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 			}
 			if (!isdelim(*s)) {
 				*endptr = s;
-				return JSON_PARSE_BAD_STRING;
+				return JSON_BAD_STRING;
 			}
 			break;
 		case 't':
 			for (const char *it = "rue"; *it; ++it, ++s) {
 				if (*it != *s)
-					return JSON_PARSE_BAD_IDENTIFIER;
+					return JSON_BAD_IDENTIFIER;
 			}
 			if (!isdelim(*s))
-				return JSON_PARSE_BAD_IDENTIFIER;
+				return JSON_BAD_IDENTIFIER;
 			o = JsonValue(JSON_TAG_BOOL, (void *)true);
 			break;
 		case 'f':
 			for (const char *it = "alse"; *it; ++it, ++s) {
 				if (*it != *s)
-					return JSON_PARSE_BAD_IDENTIFIER;
+					return JSON_BAD_IDENTIFIER;
 			}
 			if (!isdelim(*s))
-				return JSON_PARSE_BAD_IDENTIFIER;
+				return JSON_BAD_IDENTIFIER;
 			o = JsonValue(JSON_TAG_BOOL, (void *)false);
 			break;
 		case 'n':
 			for (const char *it = "ull"; *it; ++it, ++s) {
 				if (*it != *s)
-					return JSON_PARSE_BAD_IDENTIFIER;
+					return JSON_BAD_IDENTIFIER;
 			}
 			if (!isdelim(*s))
-				return JSON_PARSE_BAD_IDENTIFIER;
+				return JSON_BAD_IDENTIFIER;
 			break;
 		case ']':
 			if (pos == -1)
-				return JSON_PARSE_STACK_UNDERFLOW;
+				return JSON_STACK_UNDERFLOW;
 			if (tags[pos] != JSON_TAG_ARRAY)
-				return JSON_PARSE_MISMATCH_BRACKET;
+				return JSON_MISMATCH_BRACKET;
 			o = listToValue(JSON_TAG_ARRAY, tails[pos--]);
 			break;
 		case '}':
 			if (pos == -1)
-				return JSON_PARSE_STACK_UNDERFLOW;
+				return JSON_STACK_UNDERFLOW;
 			if (tags[pos] != JSON_TAG_OBJECT)
-				return JSON_PARSE_MISMATCH_BRACKET;
+				return JSON_MISMATCH_BRACKET;
 			if (keys[pos] != nullptr)
-				return JSON_PARSE_UNEXPECTED_CHARACTER;
+				return JSON_UNEXPECTED_CHARACTER;
 			o = listToValue(JSON_TAG_OBJECT, tails[pos--]);
 			break;
 		case '[':
 			if (++pos == JSON_STACK_SIZE)
-				return JSON_PARSE_STACK_OVERFLOW;
+				return JSON_STACK_OVERFLOW;
 			tails[pos] = nullptr;
 			tags[pos] = JSON_TAG_ARRAY;
 			keys[pos] = nullptr;
@@ -274,7 +282,7 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 			continue;
 		case '{':
 			if (++pos == JSON_STACK_SIZE)
-				return JSON_PARSE_STACK_OVERFLOW;
+				return JSON_STACK_OVERFLOW;
 			tails[pos] = nullptr;
 			tags[pos] = JSON_TAG_OBJECT;
 			keys[pos] = nullptr;
@@ -282,16 +290,16 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 			continue;
 		case ':':
 			if (separator || keys[pos] == nullptr)
-				return JSON_PARSE_UNEXPECTED_CHARACTER;
+				return JSON_UNEXPECTED_CHARACTER;
 			separator = true;
 			continue;
 		case ',':
 			if (separator || keys[pos] != nullptr)
-				return JSON_PARSE_UNEXPECTED_CHARACTER;
+				return JSON_UNEXPECTED_CHARACTER;
 			separator = true;
 			continue;
 		default:
-			return JSON_PARSE_UNEXPECTED_CHARACTER;
+			return JSON_UNEXPECTED_CHARACTER;
 		}
 
 		separator = false;
@@ -299,13 +307,13 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 		if (pos == -1) {
 			*endptr = s;
 			*value = o;
-			return JSON_PARSE_OK;
+			return JSON_OK;
 		}
 
 		if (tags[pos] == JSON_TAG_OBJECT) {
 			if (!keys[pos]) {
 				if (o.getTag() != JSON_TAG_STRING)
-					return JSON_PARSE_UNQUOTED_KEY;
+					return JSON_UNQUOTED_KEY;
 				keys[pos] = o.toString();
 				continue;
 			}
@@ -317,5 +325,5 @@ JsonParseStatus jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocato
 		}
 		tails[pos]->value = o;
 	}
-	return JSON_PARSE_BREAKING_BAD;
+	return JSON_BREAKING_BAD;
 }

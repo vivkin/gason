@@ -148,9 +148,9 @@ int main(int argc, char **argv)
 			JsonValue value;
 			JsonAllocator allocator;
 			t = now();
-			JsonParseStatus status = jsonParse(source, &endptr, &value, allocator);
+			int status = jsonParse(source, &endptr, &value, allocator);
 			auto parse_time = now() - t;
-			if (status != JSON_PARSE_OK)
+			if (status != JSON_OK)
 			{
 				LOG("error: gason: %d\n", (int)status);
 			}

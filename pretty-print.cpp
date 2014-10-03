@@ -91,19 +91,7 @@ void dumpValue(JsonValue o, int indent = 0) {
 	}
 }
 
-void printError(const char *filename, JsonParseStatus status, char *endptr, char *source, size_t size) {
-	static const char *status2string[] = {
-		"JSON_PARSE_OK",
-		"JSON_PARSE_BAD_NUMBER",
-		"JSON_PARSE_BAD_STRING",
-		"JSON_PARSE_BAD_IDENTIFIER",
-		"JSON_PARSE_STACK_OVERFLOW",
-		"JSON_PARSE_STACK_UNDERFLOW",
-		"JSON_PARSE_MISMATCH_BRACKET",
-		"JSON_PARSE_UNEXPECTED_CHARACTER",
-		"JSON_PARSE_UNQUOTED_KEY",
-		"JSON_PARSE_BREAKING_BAD"};
-
+void printError(const char *filename, int status, char *endptr, char *source, size_t size) {
 	char *s = endptr;
 	while (s != source && *s != '\n')
 		--s;
@@ -119,7 +107,7 @@ void printError(const char *filename, JsonParseStatus status, char *endptr, char
 
 	int column = (int)(endptr - s);
 
-	fprintf(stderr, "%s:%d:%d: error %s\n", filename, lineno + 1, column + 1, status2string[status]);
+	fprintf(stderr, "%s:%d:%d: error %s\n", filename, lineno + 1, column + 1, jsonStrError(status));
 
 	while (s != source + size && *s != '\n') {
 		int c = *s++;
@@ -189,8 +177,8 @@ int main(int argc, char **argv) {
 	char *endptr;
 	JsonValue value;
 	JsonAllocator allocator;
-	JsonParseStatus status = jsonParse(source, &endptr, &value, allocator);
-	if (status != JSON_PARSE_OK) {
+	int status = jsonParse(source, &endptr, &value, allocator);
+	if (status != JSON_OK) {
 		printError((argc > 1 && strcmp(argv[1], "-")) ? argv[1] : "-stdin-", status, endptr, source, sourceSize);
 		exit(EXIT_FAILURE);
 	}
