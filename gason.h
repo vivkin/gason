@@ -122,6 +122,17 @@ class JsonAllocator {
 	} *head = nullptr;
 
 public:
+    JsonAllocator() = default;
+    JsonAllocator(const JsonAllocator &) = delete; 
+    JsonAllocator &operator=(const JsonAllocator &) = delete;
+    JsonAllocator(JsonAllocator &&x): head(x.head) {
+        x.head = nullptr;
+    }
+    JsonAllocator &operator=(JsonAllocator &&x) {
+        head = x.head;
+        x.head = nullptr;
+        return *this;
+    }
 	~JsonAllocator();
 	void *allocate(size_t size);
 	void deallocate();
