@@ -5,11 +5,11 @@ option(SHOOTOUT "Build parser-shootout" OFF)
 
 add_compile_options(-O3 -std=c++11 -fno-rtti -fno-exceptions -Wall -Wextra)
 
-add_executable(gasonpp gason.cpp pretty-print.cpp)
-add_executable(test-suite gason.cpp test-suite.cpp)
+add_executable(gasonpp src/gason.cpp src/pretty-print.cpp)
+add_executable(test-suite src/gason.cpp src/test-suite.cpp)
 if(SHOOTOUT)
-	add_executable(parser-shootout parser-shootout.cpp
-		gason.cpp
+	add_executable(parser-shootout src/parser-shootout.cpp
+		src/gason.cpp
 		vjson/block_allocator.cpp
 		vjson/json.cpp)
 endif()
