@@ -4,14 +4,14 @@
 #include <sys/time.h>
 #ifdef ANDROID
 #include <android/log.h>
+#include <android_native_app_glue.h>
 #define LOG(...) __android_log_print(ANDROID_LOG_INFO, "ruberoid", __VA_ARGS__)
 #else
 #define LOG(...) fprintf(stderr, __VA_ARGS__)
 #endif
 #include "gason.h"
-#include "vjson/json.h"
-#include "sajson/include/sajson.h"
-#include "rapidjson/include/rapidjson/document.h"
+#include "../sajson/include/sajson.h"
+#include "../rapidjson/include/rapidjson/document.h"
 
 double traverse_gason(JsonValue o) {
     double x = 0;
@@ -23,27 +23,6 @@ double traverse_gason(JsonValue o) {
     case JSON_OBJECT:
         for (auto i : o) {
             x += traverse_gason(i->value);
-        }
-        break;
-    default:
-        return 0;
-    }
-    return x;
-}
-
-double traverse_vjson(json_value *value) {
-    double x = 0;
-    switch (value->type) {
-    case JSON_FLOAT:
-        x += value->float_value;
-        break;
-    case JSON_INT:
-        x += value->int_value;
-        break;
-    case JSON_ARRAY:
-    case JSON_OBJECT:
-        for (json_value *it = value->first_child; it; it = it->next_sibling) {
-            x += traverse_vjson(it);
         }
         break;
     default:
@@ -99,7 +78,7 @@ unsigned long long now() {
     return tv.tv_sec * 1000000ull + tv.tv_usec;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, const char **argv) {
     for (int i = 1; i < argc; ++i) {
         const char *filename = argv[i];
         FILE *fp = fopen(filename, "rb");
@@ -135,28 +114,6 @@ int main(int argc, char **argv) {
             double x = traverse_gason(value);
             auto traverse_time = now() - t;
             LOG("%10s %10lluus %10lluus \t(%f)\n", "gason", parse_time, traverse_time, x);
-
-            free(source);
-        }
-
-        // vjson
-        {
-            char *source = strdup(buffer);
-
-            char *errorPos = 0;
-            const char *errorDesc = 0;
-            int errorLine = 0;
-            block_allocator allocator(4096);
-            t = now();
-            json_value *root = json_parse(source, &errorPos, &errorDesc, &errorLine, &allocator);
-            auto parse_time = now() - t;
-            if (!root) {
-                LOG("error: vjson: %s\n", errorDesc);
-            }
-            t = now();
-            double x = traverse_vjson(root);
-            auto traverse_time = now() - t;
-            LOG("%10s %10lluus %10lluus \t(%f)\n", "vjson", parse_time, traverse_time, x);
 
             free(source);
         }
@@ -199,3 +156,39 @@ int main(int argc, char **argv) {
     }
     return 0;
 }
+
+#ifdef ANDROID
+void android_main(android_app *state)
+{
+    app_dummy();
+
+	const char *argv[] =
+	{
+		"",
+		"/sdcard/Download/shootout/big.json",
+		"/sdcard/Download/shootout/data.json",
+		"/sdcard/Download/shootout/monster.json",
+	};
+	main(sizeof(argv) / sizeof(argv[1]), argv);
+
+	while (1)
+	{
+		// Read all pending events.
+		int ident;
+		int events;
+		struct android_poll_source* source;
+		while ((ident = ALooper_pollAll(-1, NULL, &events, (void **)&source)) >= 0)
+		{
+			if (source != NULL)
+			{
+				source->process(state, source);
+			}
+
+			if (state->destroyRequested != 0)
+			{
+				return;
+			}
+		}
+	}
+}
+#endif
