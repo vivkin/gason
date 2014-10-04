@@ -10,8 +10,8 @@
 #define LOG(...) fprintf(stderr, __VA_ARGS__)
 #endif
 #include "gason.h"
-#include "../sajson/include/sajson.h"
-#include "../rapidjson/include/rapidjson/document.h"
+#include "../shootout/sajson/include/sajson.h"
+#include "../shootout/rapidjson/include/rapidjson/document.h"
 
 double traverse_gason(JsonValue o) {
     double x = 0;
