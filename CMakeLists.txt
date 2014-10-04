@@ -1,13 +1,14 @@
-cmake_minimum_required(VERSION 2.8.12)
-project(gason)
+cmake_minimum_required(VERSION 3.0.0)
+project(gason VERSION 1.0.0)
 
-add_compile_options(-O3 -std=c++11 -fno-rtti -fno-exceptions -Wall -Wextra)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -Wall -Wextra -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -Wall -Wextra -O3")
 
 if(ANDROID)
-    set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/ruberoid/libs/${ANDROID_ABI})
     include_directories(${ANDROID_NDK}/sources/android/native_app_glue)
     link_libraries(android log)
     add_library(parser-shootout SHARED src/parser-shootout.cpp src/gason.cpp ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c)
+    target_compile_options(parser-shootout PRIVATE -Wno-unused-parameter)
 else()
     add_executable(gasonpp src/gason.cpp src/pretty-print.cpp)
     add_executable(test-suite src/gason.cpp src/test-suite.cpp)
