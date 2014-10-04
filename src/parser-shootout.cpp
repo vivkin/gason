@@ -97,27 +97,6 @@ int main(int argc, const char **argv) {
         LOG("%s: length %zd\n", filename, buffer_size);
         unsigned long long t;
 
-        // gason
-        {
-            char *source = strdup(buffer);
-
-            char *endptr;
-            JsonValue value;
-            JsonAllocator allocator;
-            t = now();
-            int status = jsonParse(source, &endptr, &value, allocator);
-            auto parse_time = now() - t;
-            if (status != JSON_OK) {
-                LOG("error: gason: %s\n", jsonStrError(status));
-            }
-            t = now();
-            double x = traverse_gason(value);
-            auto traverse_time = now() - t;
-            LOG("%10s %10lluus %10lluus \t(%f)\n", "gason", parse_time, traverse_time, x);
-
-            free(source);
-        }
-
         // sajson
         {
             char *source = strdup(buffer);
@@ -143,7 +122,7 @@ int main(int argc, const char **argv) {
             t = now();
             rapidjson::Document document;
             if (document.ParseInsitu<0>(source).HasParseError()) {
-                LOG("error: rapidjson: %s\n", document.GetParseError());
+                LOG("error: rapidjson: %d\n", document.GetParseError());
             }
             auto parse_time = now() - t;
             t = now();
@@ -153,42 +132,58 @@ int main(int argc, const char **argv) {
 
             free(source);
         }
+
+        // gason
+        {
+            char *source = strdup(buffer);
+
+            char *endptr;
+            JsonValue value;
+            JsonAllocator allocator;
+            t = now();
+            int status = jsonParse(source, &endptr, &value, allocator);
+            auto parse_time = now() - t;
+            if (status != JSON_OK) {
+                LOG("error: gason: %s\n", jsonStrError(status));
+            }
+            t = now();
+            double x = traverse_gason(value);
+            auto traverse_time = now() - t;
+            LOG("%10s %10lluus %10lluus \t(%f)\n", "gason", parse_time, traverse_time, x);
+
+            free(source);
+        }
     }
     return 0;
 }
 
 #ifdef ANDROID
-void android_main(android_app *state)
-{
+void android_main(android_app *state) {
     app_dummy();
 
-	const char *argv[] =
-	{
-		"",
-		"/sdcard/Download/shootout/big.json",
-		"/sdcard/Download/shootout/data.json",
-		"/sdcard/Download/shootout/monster.json",
-	};
-	main(sizeof(argv) / sizeof(argv[1]), argv);
+    const char *argv[] =
+        {
+         "",
+         "/sdcard/Download/shootout/big.json",
+         "/sdcard/Download/shootout/data.json",
+         "/sdcard/Download/shootout/monster.json",
+        };
+    main(sizeof(argv) / sizeof(argv[1]), argv);
 
-	while (1)
-	{
-		// Read all pending events.
-		int ident;
-		int events;
-		struct android_poll_source* source;
-		while ((ident = ALooper_pollAll(-1, NULL, &events, (void **)&source)) >= 0)
-		{
-			if (source != NULL)
-			{
-				source->process(state, source);
-			}
+    while (1) {
+        // Read all pending events.
+        int ident;
+        int events;
+        struct android_poll_source *source;
+        while ((ident = ALooper_pollAll(-1, NULL, &events, (void **)&source)) >= 0) {
+            if (source != NULL) {
+                source->process(state, source);
+            }
 
-			if (state->destroyRequested != 0)
-			{
-				return;
-			}
-		}
-	}
+            if (state->destroyRequested != 0) {
+                return;
+            }
+        }
+    }
 }
 #endif

@@ -133,7 +133,9 @@ public:
         x.head = nullptr;
         return *this;
     }
-    ~JsonAllocator();
+    ~JsonAllocator() {
+        deallocate();
+    }
     void *allocate(size_t size);
     void deallocate();
 };

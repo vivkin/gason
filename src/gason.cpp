@@ -17,10 +17,6 @@ const char *jsonStrError(int err) {
     }
 }
 
-JsonAllocator::~JsonAllocator() {
-    deallocate();
-}
-
 void *JsonAllocator::allocate(size_t size) {
     size = (size + 7) & ~7;
 
