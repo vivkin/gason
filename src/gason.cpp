@@ -1,6 +1,47 @@
 #include "gason.h"
 #include <ctype.h>
+#include <string.h>
 #include <stdlib.h>
+
+#ifdef __SSE4_2__
+#include <nmmintrin.h>
+
+#define strspanany(haystack, needle, n)                                        \
+    _mm_cmpestri(_mm_loadu_si128((const __m128i *)(needle)), sizeof((needle)), \
+                 _mm_loadu_si128((const __m128i *)(haystack)), n,              \
+                 _SIDD_CMP_EQUAL_ANY | _SIDD_NEGATIVE_POLARITY)
+
+#define strspanrng(haystack, needle, n)                                        \
+    _mm_cmpestri(_mm_loadu_si128((const __m128i *)(needle)), sizeof((needle)), \
+                 _mm_loadu_si128((const __m128i *)(haystack)), n,              \
+                 _SIDD_CMP_RANGES | _SIDD_NEGATIVE_POLARITY)
+
+#define cmpistri(fname, flags)                                            \
+    size_t fname(const char *haystack, const char *needle) {              \
+        __m128i a = _mm_loadu_si128((const __m128i *)(needle));           \
+        size_t n = 0;                                                     \
+        int i;                                                            \
+        do {                                                              \
+            __m128i b = _mm_loadu_si128((const __m128i *)(haystack + n)); \
+            i = _mm_cmpistri(a, b, flags);                                \
+            n += i;                                                       \
+        } while (i == 16);                                                \
+        return n;                                                         \
+    }
+
+cmpistri(strfindany, _SIDD_CMP_EQUAL_ANY | _SIDD_POSITIVE_POLARITY);
+cmpistri(strskipany, _SIDD_CMP_EQUAL_ANY | _SIDD_NEGATIVE_POLARITY);
+cmpistri(strfindrng, _SIDD_CMP_RANGES | _SIDD_POSITIVE_POLARITY);
+cmpistri(strskiprng, _SIDD_CMP_RANGES | _SIDD_NEGATIVE_POLARITY);
+
+#undef cmpistri
+
+#else
+
+#define strfindany strspn
+#define strskipany strcspn
+
+#endif
 
 #define JSON_ZONE_SIZE 4096
 #define JSON_STACK_SIZE 32
@@ -48,15 +89,11 @@ void JsonAllocator::deallocate() {
 }
 
 static inline bool isdelim(char c) {
-    return isspace(c) || c == ',' || c == ':' || c == ']' || c == '}' || c == '\0';
+    return strchr("\t\n\v\f\r ,:]}", c) != NULL;
 }
 
-static inline int char2int(char c) {
-    if (c >= 'a')
-        return c - 'a' + 10;
-    if (c >= 'A')
-        return c - 'A' + 10;
-    return c - '0';
+static int char2int(char c) {
+    return (c >= 'A') ? ((c & ~' ') - 'A' + 10) : (c - '0');
 }
 
 static double string2double(char *s, char **endptr) {
@@ -135,8 +172,12 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
     while (*s) {
         JsonValue o;
 
+#ifdef __SSE4_2__
+        s += strskipany(s, "\t\n\v\f\r ");
+#else
         while (*s && isspace(*s))
             ++s;
+#endif
 
         *endptr = s++;
         switch (**endptr) {
@@ -192,6 +233,18 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
                         break;
                     case 'u':
                         c = 0;
+#ifdef __SSE4_2__
+                        {
+                            ++s;
+                            int n = strspanrng(s, "09AFaf", 4);
+                            if (n != 4) {
+                                *endptr = s + n;
+                                return JSON_BAD_STRING;
+                            }
+                            s += 3;
+                            c = (char2int(s[-3]) << 12) + (char2int(s[-2]) << 8) + (char2int(s[-1]) << 4) + char2int(s[0]);
+                        }
+#else
                         for (int i = 0; i < 4; ++i) {
                             if (!isxdigit(*++s)) {
                                 *endptr = s;
@@ -199,6 +252,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
                             }
                             c = c * 16 + char2int(*s);
                         }
+#endif
                         if (c < 0x80) {
                             *it = c;
                         } else if (c < 0x800) {

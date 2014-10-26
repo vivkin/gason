@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.0)
 project(gason VERSION 1.0.0)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -Wall -Wextra -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -Wall -Wextra -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -Wall -Wextra -msse4 -O3")
 
 if(NOT CMAKE_CROSSCOMPILING)
     add_executable(gasonpp src/gason.cpp src/pretty-print.cpp)
