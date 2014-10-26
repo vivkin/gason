@@ -2,20 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef __SSE4_2__
-#include <nmmintrin.h>
-#define cmpistri(haystack, needle, flags) ({                              \
-        __m128i a = _mm_loadu_si128((const __m128i *)(needle));           \
-        size_t n = 0;                                                     \
-        int i;                                                            \
-        do {                                                              \
-            __m128i b = _mm_loadu_si128((const __m128i *)(haystack + n)); \
-            i = _mm_cmpistri(a, b, flags);                                \
-            n += i;                                                       \
-        } while (i == 16);                                                \
-        n; })
-#endif
-
 #define JSON_ZONE_SIZE 4096
 #define JSON_STACK_SIZE 32
 
@@ -61,12 +47,39 @@ void JsonAllocator::deallocate() {
     }
 }
 
-static inline bool isdigit(char c) {
-    return c >= '0' && c <= '9';
+#ifdef __SSE4_2__
+#include <nmmintrin.h>
+#define cmpistri(haystack, needle, flags)                             \
+    do {                                                              \
+        __m128i a = _mm_loadu_si128((const __m128i *)(needle));       \
+        int i;                                                        \
+        do {                                                          \
+            __m128i b = _mm_loadu_si128((const __m128i *)(haystack)); \
+            i = _mm_cmpistri(a, b, flags);                            \
+            haystack += i;                                            \
+        } while (i == 16);                                            \
+    } while (0)
+#endif
+
+static char *find_first_of(char *haystack, const char *needle) {
+#ifdef __SSE4_2__
+    cmpistri(haystack, needle, 0);
+#else
+    char *s = strpbrk(haystack, needle);
+    if (s)
+        return s;
+#endif
+    return haystack;
 }
 
-static inline bool isxdigit(char c) {
-    return (c >= '0' && c <= '9') || ((c & ~' ') >= 'A' && (c & ~' ') <= 'F');
+static char *find_first_not_of(char *haystack, const char *needle) {
+#ifdef __SSE4_2__
+    cmpistri(haystack, needle, _SIDD_NEGATIVE_POLARITY);
+#else
+    while (strchr(needle, *haystack))
+        ++haystack;
+#endif
+    return haystack;
 }
 
 static inline bool isdelim(char c) {
@@ -79,23 +92,12 @@ static inline bool isdelim(char c) {
     return false;
 }
 
-size_t find_first_of(const char *haystack, const char *needle) {
-#ifdef __SSE4_2__
-    return cmpistri(haystack, needle, 0);
-#endif
-    (void)sizeof(haystack);
-    (void)sizeof(needle);
-    return 0;
+static inline bool isdigit(char c) {
+    return c >= '0' && c <= '9';
 }
 
-size_t find_first_not_of(const char *haystack, const char *needle) {
-#ifdef __SSE4_2__
-    return cmpistri(haystack, needle, _SIDD_NEGATIVE_POLARITY);
-#endif
-    const char *s = haystack;
-    while (strchr(needle, *s))
-        ++s;
-    return s - haystack;
+static inline bool isxdigit(char c) {
+    return (c >= '0' && c <= '9') || ((c & ~' ') >= 'A' && (c & ~' ') <= 'F');
 }
 
 static inline int char2int(char c) {
@@ -177,7 +179,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
     *endptr = s;
 
     while (*s) {
-        s += find_first_not_of(s, "\x20\t\n\v\f\r");
+        s = find_first_not_of(s, "\x20\t\n\v\f\r");
         *endptr = s++;
         switch (**endptr) {
         case '\0':
