@@ -1,17 +1,14 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(gason VERSION 1.0.0)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions")
-add_compile_options(-Wall -Wextra -g -O3)
+add_compile_options(-std=c++11 -fno-rtti -fno-exceptions -Wall -Wextra -O3 -g)
 
-if(NOT CMAKE_CROSSCOMPILING)
-    add_executable(gasonpp src/gason.cpp src/pretty-print.cpp)
-    add_executable(test-suite src/gason.cpp src/test-suite.cpp)
+option(USE_SSE "Use SSE 4.2 extensions" OFF)
+if(USE_SSE)
+    add_compile_options(-msse4)
 endif()
 
 option(SHOOTOUT "Build parser-shootout" OFF)
-
 if(SHOOTOUT)
     if(ANDROID)
         add_library(parser-shootout SHARED
@@ -24,4 +21,9 @@ if(SHOOTOUT)
         add_executable(parser-shootout src/parser-shootout.cpp src/gason.cpp)
     endif()
     target_compile_options(parser-shootout PRIVATE -Wno-unused-parameter -Wno-ignored-qualifiers)
+endif()
+
+if(NOT CMAKE_CROSSCOMPILING)
+    add_executable(gasonpp src/gason.cpp src/pretty-print.cpp)
+    add_executable(test-suite src/gason.cpp src/test-suite.cpp)
 endif()

@@ -4,19 +4,7 @@
 
 #ifdef __SSE4_2__
 #include <nmmintrin.h>
-
-#define strspanany(haystack, needle, n)                                        \
-    _mm_cmpestri(_mm_loadu_si128((const __m128i *)(needle)), sizeof((needle)), \
-                 _mm_loadu_si128((const __m128i *)(haystack)), n,              \
-                 _SIDD_CMP_EQUAL_ANY | _SIDD_NEGATIVE_POLARITY)
-
-#define strspanrng(haystack, needle, n)                                        \
-    _mm_cmpestri(_mm_loadu_si128((const __m128i *)(needle)), sizeof((needle)), \
-                 _mm_loadu_si128((const __m128i *)(haystack)), n,              \
-                 _SIDD_CMP_RANGES | _SIDD_NEGATIVE_POLARITY)
-
-#define cmpistri(fname, flags)                                            \
-    size_t fname(const char *haystack, const char *needle) {              \
+#define cmpistri(haystack, needle, flags) ({                              \
         __m128i a = _mm_loadu_si128((const __m128i *)(needle));           \
         size_t n = 0;                                                     \
         int i;                                                            \
@@ -25,21 +13,7 @@
             i = _mm_cmpistri(a, b, flags);                                \
             n += i;                                                       \
         } while (i == 16);                                                \
-        return n;                                                         \
-    }
-
-cmpistri(strfindany, _SIDD_CMP_EQUAL_ANY | _SIDD_POSITIVE_POLARITY);
-cmpistri(strskipany, _SIDD_CMP_EQUAL_ANY | _SIDD_NEGATIVE_POLARITY);
-cmpistri(strfindrng, _SIDD_CMP_RANGES | _SIDD_POSITIVE_POLARITY);
-cmpistri(strskiprng, _SIDD_CMP_RANGES | _SIDD_NEGATIVE_POLARITY);
-
-#undef cmpistri
-
-#else
-
-#define strfindany strspn
-#define strskipany strcspn
-
+        n; })
 #endif
 
 #define JSON_ZONE_SIZE 4096
@@ -87,10 +61,6 @@ void JsonAllocator::deallocate() {
     }
 }
 
-static inline bool iscntrl(char c) {
-    return (unsigned char)c < ' ' || (unsigned char)c == '\x7F';
-}
-
 static inline bool isdigit(char c) {
     return c >= '0' && c <= '9';
 }
@@ -99,18 +69,33 @@ static inline bool isxdigit(char c) {
     return (c >= '0' && c <= '9') || ((c & ~' ') >= 'A' && (c & ~' ') <= 'F');
 }
 
-static inline bool isspace(char c) {
-    for (auto i : "\x20\t\n\v\f\r")
+static inline bool isdelim(char c) {
+#ifdef __clang__
+    return strchr(",:]}\x20\t\n\v\f\r", c);
+#endif
+    for (char i : ",:]}\x20\t\n\v\f\r")
         if (i == c)
             return true;
     return false;
 }
 
-static inline bool isdelim(char c) {
-    for (auto i : ",:]}\x20\t\n\v\f\r")
-        if (i == c)
-            return true;
-    return false;
+size_t find_first_of(const char *haystack, const char *needle) {
+#ifdef __SSE4_2__
+    return cmpistri(haystack, needle, 0);
+#endif
+    (void)sizeof(haystack);
+    (void)sizeof(needle);
+    return 0;
+}
+
+size_t find_first_not_of(const char *haystack, const char *needle) {
+#ifdef __SSE4_2__
+    return cmpistri(haystack, needle, _SIDD_NEGATIVE_POLARITY);
+#endif
+    const char *s = haystack;
+    while (strchr(needle, *s))
+        ++s;
+    return s - haystack;
 }
 
 static inline int char2int(char c) {
@@ -186,22 +171,13 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
     JsonNode *tails[JSON_STACK_SIZE];
     JsonTag tags[JSON_STACK_SIZE];
     char *keys[JSON_STACK_SIZE];
+    JsonValue o;
     int pos = -1;
-
     bool separator = true;
-
     *endptr = s;
 
     while (*s) {
-        JsonValue o;
-
-#ifdef __SSE4_2__
-        s += strskipany(s, "\t\n\v\f\r ");
-#else
-        while (*s && isspace(*s))
-            ++s;
-#endif
-
+        s += find_first_not_of(s, "\x20\t\n\v\f\r");
         *endptr = s++;
         switch (**endptr) {
         case '\0':
@@ -256,7 +232,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
                         break;
                     case 'u':
                         c = 0;
-#ifdef __SSE4_2__
+#if 0
                         {
                             ++s;
                             int n = strspanrng(s, "09AFaf", 4);
@@ -291,7 +267,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
                         *endptr = s;
                         return JSON_BAD_STRING;
                     }
-                } else if (iscntrl(c)) {
+                } else if ((unsigned int)c < ' ' || c == '\x7F') {
                     *endptr = s;
                     return JSON_BAD_STRING;
                 } else if (c == '"') {
