@@ -1,5 +1,4 @@
 #include "gason.h"
-#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -88,12 +87,36 @@ void JsonAllocator::deallocate() {
     }
 }
 
-static inline bool isdelim(char c) {
-    return strchr("\t\n\v\f\r ,:]}", c) != NULL;
+static inline bool iscntrl(char c) {
+    return (unsigned char)c < ' ' || (unsigned char)c == '\x7F';
 }
 
-static int char2int(char c) {
-    return (c >= 'A') ? ((c & ~' ') - 'A' + 10) : (c - '0');
+static inline bool isdigit(char c) {
+    return c >= '0' && c <= '9';
+}
+
+static inline bool isxdigit(char c) {
+    return (c >= '0' && c <= '9') || ((c & ~' ') >= 'A' && (c & ~' ') <= 'F');
+}
+
+static inline bool isspace(char c) {
+    for (auto i : "\x20\t\n\v\f\r")
+        if (i == c)
+            return true;
+    return false;
+}
+
+static inline bool isdelim(char c) {
+    for (auto i : ",:]}\x20\t\n\v\f\r")
+        if (i == c)
+            return true;
+    return false;
+}
+
+static inline int char2int(char c) {
+    if (c <= '9')
+        return c - '0';
+    return (c & ~' ') - 'A' + 10;
 }
 
 static double string2double(char *s, char **endptr) {
