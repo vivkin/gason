@@ -177,6 +177,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
     int pos = -1;
     bool separator = true;
     *endptr = s;
+    char *p;
 
     while (*s) {
         s = find_first_not_of(s, "\x20\t\n\v\f\r");
@@ -207,6 +208,16 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
             break;
         case '"':
             o = JsonValue(JSON_STRING, s);
+            p = find_first_of(s, "\\\"");
+            if (*p == '"') {
+                *p = 0;
+                s = p + 1;
+                if (!isdelim(*s)) {
+                    *endptr = s;
+                    return JSON_BAD_STRING;
+                }
+                break;
+            }
             for (char *it = s; *s; ++it, ++s) {
                 int c = *it = *s;
                 if (c == '\\') {
@@ -234,26 +245,14 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
                         break;
                     case 'u':
                         c = 0;
-#if 0
-                        {
-                            ++s;
-                            int n = strspanrng(s, "09AFaf", 4);
-                            if (n != 4) {
-                                *endptr = s + n;
-                                return JSON_BAD_STRING;
-                            }
-                            s += 3;
-                            c = (char2int(s[-3]) << 12) + (char2int(s[-2]) << 8) + (char2int(s[-1]) << 4) + char2int(s[0]);
-                        }
-#else
                         for (int i = 0; i < 4; ++i) {
-                            if (!isxdigit(*++s)) {
+                            if (isxdigit(*++s)) {
+                                c = c * 16 + char2int(*s);
+                            } else {
                                 *endptr = s;
                                 return JSON_BAD_STRING;
                             }
-                            c = c * 16 + char2int(*s);
                         }
-#endif
                         if (c < 0x80) {
                             *it = c;
                         } else if (c < 0x800) {
