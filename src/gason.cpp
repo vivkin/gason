@@ -177,7 +177,6 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
     int pos = -1;
     bool separator = true;
     *endptr = s;
-    char *p;
 
     while (*s) {
         s = find_first_not_of(s, "\x20\t\n\v\f\r");
@@ -208,10 +207,9 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
             break;
         case '"':
             o = JsonValue(JSON_STRING, s);
-            p = find_first_of(s, "\\\"");
-            if (*p == '"') {
-                *p = 0;
-                s = p + 1;
+            s = find_first_of(s, "\\\"");
+            if (*s == '"') {
+                *s++ = 0;
                 if (!isdelim(*s)) {
                     *endptr = s;
                     return JSON_BAD_STRING;
