@@ -1,5 +1,4 @@
 #include "gason.h"
-#include <string.h>
 #include <stdlib.h>
 
 #define JSON_ZONE_SIZE 4096
@@ -61,35 +60,12 @@ void JsonAllocator::deallocate() {
     } while (0)
 #endif
 
-static char *find_first_of(char *haystack, const char *needle) {
-#ifdef __SSE4_2__
-    cmpistri(haystack, needle, 0);
-#else
-    char *s = strpbrk(haystack, needle);
-    if (s)
-        return s;
-#endif
-    return haystack;
-}
-
-static char *find_first_not_of(char *haystack, const char *needle) {
-#ifdef __SSE4_2__
-    cmpistri(haystack, needle, _SIDD_NEGATIVE_POLARITY);
-#else
-    while (strchr(needle, *haystack))
-        ++haystack;
-#endif
-    return haystack;
+static inline bool isspace(char c) {
+    return c == ' ' || (c >= '\t' && c <= '\r');
 }
 
 static inline bool isdelim(char c) {
-#ifdef __clang__
-    return strchr(",:]}\x20\t\n\v\f\r", c);
-#endif
-    for (char i : ",:]}\x20\t\n\v\f\r")
-        if (i == c)
-            return true;
-    return false;
+    return c == ',' || c == ':' || c == ']' || c == '}' || isspace(c) || !c;
 }
 
 static inline bool isdigit(char c) {
@@ -179,11 +155,13 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
     *endptr = s;
 
     while (*s) {
-        s = find_first_not_of(s, "\x20\t\n\v\f\r");
+#ifdef __SSE4_2__
+        cmpistri(s, "\x20\t\n\v\f\r", _SIDD_NEGATIVE_POLARITY);
+#else
+        while (isspace(*s)) ++s;
+#endif
         *endptr = s++;
         switch (**endptr) {
-        case '\0':
-            continue;
         case '-':
             if (!isdigit(*s) && *s != '.') {
                 *endptr = s;
@@ -207,15 +185,9 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
             break;
         case '"':
             o = JsonValue(JSON_STRING, s);
-            s = find_first_of(s, "\\\"");
-            if (*s == '"') {
-                *s++ = 0;
-                if (!isdelim(*s)) {
-                    *endptr = s;
-                    return JSON_BAD_STRING;
-                }
-                break;
-            }
+#ifdef __SSE4_2__
+            cmpistri(s, "\"\\\t\n", 0);
+#endif
             for (char *it = s; *s; ++it, ++s) {
                 int c = *it = *s;
                 if (c == '\\') {
@@ -305,6 +277,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
             }
             if (!isdelim(*s))
                 return JSON_BAD_IDENTIFIER;
+            o = JsonValue();
             break;
         case ']':
             if (pos == -1)
@@ -347,6 +320,8 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
             if (separator || keys[pos] != nullptr)
                 return JSON_UNEXPECTED_CHARACTER;
             separator = true;
+            continue;
+        case '\0':
             continue;
         default:
             return JSON_UNEXPECTED_CHARACTER;
