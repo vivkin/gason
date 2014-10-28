@@ -12,7 +12,7 @@ void parse(const char *csource, bool ok) {
     JsonAllocator allocator;
     int result = jsonParse(source, &endptr, &value, allocator);
     if (ok && result) {
-        fprintf(stderr, "FAILED %d: %s\n%s\n%*s\n", parsed, jsonStrError(result), csource, (int)(endptr - source + 1), "^");
+        fprintf(stderr, "FAILED %d: %s\n%s\n%*s - \\x%02X\n", parsed, jsonStrError(result), csource, (int)(endptr - source + 1), "^", *endptr);
         ++failed;
     }
     if (!ok && !result) {
@@ -65,8 +65,16 @@ break"])json");
       fail(u8R"json([0e+-1])json");
       fail(u8R"json({"Comma instead if closing brace": true,)json");
       fail(u8R"json(["mismatch"})json");
-      pass(u8R"json(
-[
+      pass(u8R"json([[[[[[[[[[[[[[[[[[["Not too deep"]]]]]]]]]]]]]]]]]]])json");
+      pass(u8R"json([1, 2, "хУй", [[0.5], 7.11, 13.19e+1], "ba\u0020r", [ [ ] ], -0, -.666, [true, null], {"WAT?!": false}])json");
+      pass(u8R"json({
+    "JSON Test Pattern pass3": {
+        "The outermost value": "must be an object or array.",
+        "In this test": "It is an object."
+    }
+}
+)json");
+      pass(u8R"json([
     "JSON Test Pattern pass1",
     {"object with 1 member":["array with 1 element"]},
     {},
@@ -124,15 +132,6 @@ break"])json");
 1e-1,
 1e00,2e+00,2e-00
 ,"rosebud"])json");
-      pass(u8R"json([[[[[[[[[[[[[[[[[[["Not too deep"]]]]]]]]]]]]]]]]]]])json");
-      pass(u8R"json({
-    "JSON Test Pattern pass3": {
-        "The outermost value": "must be an object or array.",
-        "In this test": "It is an object."
-    }
-}
-)json");
-      pass(u8R"json([1, 2, "хУй", [[0.5], 7.11, 13.19e+1], "ba\u0020r", [ [ ] ], -0, -.666, [true, null], {"WAT?!": false}])json");
 
     if (failed)
         fprintf(stderr, "%d/%d TESTS FAILED\n", failed, parsed);
