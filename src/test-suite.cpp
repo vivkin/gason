@@ -1,62 +1,71 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#if !defined(_WIN32) && !defined(NDEBUG)
-#include <execinfo.h>
-#include <signal.h>
-#endif
-#ifdef ANDROID
-#include <android/log.h>
-#define LOG(...) __android_log_print(ANDROID_LOG_INFO, "ruberoid", __VA_ARGS__)
-#else
-#define LOG(...) fprintf(stderr, __VA_ARGS__)
-#endif
 #include "gason.h"
+#include <string.h>
+#include <stdio.h>
 
-struct {
-    bool f;
-    const char *s;
-} SUITE[] = {
-      {false, R"*(1234567890)*"},
-      {false, R"*("A JSON payload should be an object or array, not a string.")*"},
-      {true, R"*(["Unclosed array")*"},
-      {true, R"*({unquoted_key: "keys must be quoted"})*"},
-      {false, R"*(["extra comma",])*"},
-      {true, R"*(["double extra comma",,])*"},
-      {true, R"*([   , "<-- missing value"])*"},
-      {true, R"*([ 1 [   , "<-- missing inner value 1"]])*"},
-      {true, R"*({ "1" [   , "<-- missing inner value 2"]})*"},
-      {true, R"*([ "1" {   , "<-- missing inner value 3":"x"}])*"},
-      {false, R"*(["Comma after the close"],)*"},
-      {false, R"*({"Extra comma": true,})*"},
-      {false, R"*({"Extra value after close": true} "misplaced quoted value")*"},
-      {true, R"*({"Illegal expression": 1 + 2})*"},
-      {true, R"*({"Illegal invocation": alert()})*"},
-      {false, R"*({"Numbers cannot have leading zeroes": 013})*"},
-      {true, R"*({"Numbers cannot be hex": 0x14})*"},
-      {true, R"*(["Illegal backslash escape: \x15"])*"},
-      {true, R"*([\naked])*"},
-      {true, R"*(["Illegal backslash escape: \017"])*"},
-      {true, R"*([[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]])*"},
-      {false, R"*({"Missing colon" null})*"},
-      {true, R"*({"Unfinished object"})*"},
-      {true, R"*({"Unfinished object 2" null "x"})*"},
-      {true, R"*({"Double colon":: null})*"},
-      {true, R"*({"Comma instead of colon", null})*"},
-      {true, R"*(["Colon instead of comma": false])*"},
-      {true, R"*(["Bad value", truth])*"},
-      {true, R"*(['single quote'])*"},
-      {true, R"*(["	tab	character	in	string	"])*"},
-      {true, R"*(["line
-break"])*"},
-      {true, R"*(["line\
-break"])*"},
-      {false, R"*([0e])*"},
-      {false, R"*([0e+])*"},
-      {true, R"*([0e+-1])*"},
-      {true, R"*({"Comma instead if closing brace": true,)*"},
-      {true, R"*(["mismatch"})*"},
-      {false, R"*(
+static int parsed;
+static int failed;
+
+void parse(const char *csource, bool ok) {
+    char *source = strdup(csource);
+    char *endptr;
+    JsonValue value;
+    JsonAllocator allocator;
+    int result = jsonParse(source, &endptr, &value, allocator);
+    if (ok && result) {
+        fprintf(stderr, "FAILED %d: %s\n%s\n%*s\n", parsed, jsonStrError(result), csource, (int)(endptr - source + 1), "^");
+        ++failed;
+    }
+    if (!ok && !result) {
+        fprintf(stderr, "PASSED %d:\n%s\n", parsed, csource);
+        ++failed;
+    }
+    ++parsed;
+}
+
+#define pass(csource) parse(csource, true)
+#define fail(csource) parse(csource, false)
+
+int main() {
+      pass(u8R"json(1234567890)json");
+      pass(u8R"json("A JSON payload should be an object or array, not a string.")json");
+      fail(u8R"json(["Unclosed array")json");
+      fail(u8R"json({unquoted_key: "keys must be quoted"})json");
+      pass(u8R"json(["extra comma",])json");
+      fail(u8R"json(["double extra comma",,])json");
+      fail(u8R"json([   , "<-- missing value"])json");
+      fail(u8R"json([ 1 [   , "<-- missing inner value 1"]])json");
+      fail(u8R"json({ "1" [   , "<-- missing inner value 2"]})json");
+      fail(u8R"json([ "1" {   , "<-- missing inner value 3":"x"}])json");
+      pass(u8R"json(["Comma after the close"],)json");
+      pass(u8R"json({"Extra comma": true,})json");
+      pass(u8R"json({"Extra value after close": true} "misplaced quoted value")json");
+      fail(u8R"json({"Illegal expression": 1 + 2})json");
+      fail(u8R"json({"Illegal invocation": alert()})json");
+      pass(u8R"json({"Numbers cannot have leading zeroes": 013})json");
+      fail(u8R"json({"Numbers cannot be hex": 0x14})json");
+      fail(u8R"json(["Illegal backslash escape: \x15"])json");
+      fail(u8R"json([\naked])json");
+      fail(u8R"json(["Illegal backslash escape: \017"])json");
+      fail(u8R"json([[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]])json");
+      pass(u8R"json({"Missing colon" null})json");
+      fail(u8R"json({"Unfinished object"})json");
+      fail(u8R"json({"Unfinished object 2" null "x"})json");
+      fail(u8R"json({"Double colon":: null})json");
+      fail(u8R"json({"Comma instead of colon", null})json");
+      fail(u8R"json(["Colon instead of comma": false])json");
+      fail(u8R"json(["Bad value", truth])json");
+      fail(u8R"json(['single quote'])json");
+      fail(u8R"json(["	tab	character	in	string	"])json");
+      fail(u8R"json(["line
+break"])json");
+      fail(u8R"json(["line\
+break"])json");
+      pass(u8R"json([0e])json");
+      pass(u8R"json([0e+])json");
+      fail(u8R"json([0e+-1])json");
+      fail(u8R"json({"Comma instead if closing brace": true,)json");
+      fail(u8R"json(["mismatch"})json");
+      pass(u8R"json(
 [
     "JSON Test Pattern pass1",
     {"object with 1 member":["array with 1 element"]},
@@ -83,7 +92,7 @@ break"])*"},
         "ALPHA": "ABCDEFGHIJKLMNOPQRSTUVWYZ",
         "digit": "0123456789",
         "0123456789": "digit",
-        "special": "`1~!@#$%^&*()_+-={':[,]}|;.</>?",
+        "special": "`1~!@#$%^&json()_+-={':[,]}|;.</>?",
         "hex": "\u0123\u4567\u89AB\uCDEF\uabcd\uef4A",
         "true": true,
         "false": false,
@@ -92,8 +101,8 @@ break"])*"},
         "object":{  },
         "address": "50 St. James Street",
         "url": "http://www.JSON.org/",
-        "comment": "// /* <!-- --",
-        "# -- --> */": " ",
+        "comment": "// /json <!-- --",
+        "# -- --> json/": " ",
         " s p a c e d " :[1,2 , 3
 
 ,
@@ -101,7 +110,7 @@ break"])*"},
 4 , 5        ,          6           ,7        ],"compact":[1,2,3,4,5,6,7],
         "jsontext": "{\"object with 1 member\":[\"array with 1 element\"]}",
         "quotes": "&#34; \u0022 %22 0x22 034 &#x22;",
-        "\/\\\"\uCAFE\uBABE\uAB98\uFCDE\ubcda\uef4A\b\f\n\r\t`1~!@#$%^&*()_+-=[]{}|;:',./<>?"
+        "\/\\\"\uCAFE\uBABE\uAB98\uFCDE\ubcda\uef4A\b\f\n\r\t`1~!@#$%^&json()_+-=[]{}|;:',./<>?"
 : "A key can be any string"
     },
     0.5 ,98.6
@@ -114,47 +123,21 @@ break"])*"},
 0.1e1,
 1e-1,
 1e00,2e+00,2e-00
-,"rosebud"])*"},
-      {false, R"*([[[[[[[[[[[[[[[[[[["Not too deep"]]]]]]]]]]]]]]]]]]])*"},
-      {false, R"*({
+,"rosebud"])json");
+      pass(u8R"json([[[[[[[[[[[[[[[[[[["Not too deep"]]]]]]]]]]]]]]]]]]])json");
+      pass(u8R"json({
     "JSON Test Pattern pass3": {
         "The outermost value": "must be an object or array.",
         "In this test": "It is an object."
     }
 }
-)*"},
-      {false, R"*([1, 2, "хУй", [[0.5], 7.11, 13.19e+1], "ba\u0020r", [ [ ] ], -0, -.666, [true, null], {"WAT?!": false}])*"}};
+)json");
+      pass(u8R"json([1, 2, "хУй", [[0.5], 7.11, 13.19e+1], "ba\u0020r", [ [ ] ], -0, -.666, [true, null], {"WAT?!": false}])json");
 
-int main() {
-#if !defined(_WIN32) && !defined(NDEBUG)
-    signal(SIGABRT, [](int) {
-		void *callstack[64];
-		int size = backtrace(callstack, sizeof(callstack)/sizeof(callstack[0]));
-		char **strings = backtrace_symbols(callstack, size);
-		for (int i = 0; i < size; ++i)
-			fprintf(stderr, "%s\n", strings[i]);
-		free(strings);
-		exit(EXIT_FAILURE);
-    });
-#endif
-
-    char *endptr;
-    JsonValue value;
-    JsonAllocator allocator;
-    int passed = 0;
-    int count = 0;
-    for (auto t : SUITE) {
-        char *source = strdup(t.s);
-        int status = jsonParse(source, &endptr, &value, allocator);
-        free(source);
-        if (t.f ^ (status == JSON_OK)) {
-            ++passed;
-        } else {
-            LOG("%d: must be %s: %s\n", count, t.f ? "fail" : "pass", t.s);
-        }
-        ++count;
-    }
-    LOG("%d/%d\n", passed, count);
+    if (failed)
+        fprintf(stderr, "%d/%d TESTS FAILED\n", failed, parsed);
+    else
+        fprintf(stderr, "ALL TESTS PASSED\n");
 
     return 0;
 }
