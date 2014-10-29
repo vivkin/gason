@@ -4,12 +4,6 @@
 #include <stddef.h>
 #include <assert.h>
 
-#define JSON_VALUE_PAYLOAD_MASK 0x00007FFFFFFFFFFFULL
-#define JSON_VALUE_NAN_MASK 0x7FF8000000000000ULL
-#define JSON_VALUE_NULL 0x7FFF800000000000ULL
-#define JSON_VALUE_TAG_MASK 0xF
-#define JSON_VALUE_TAG_SHIFT 47
-
 enum JsonTag {
     JSON_NUMBER = 0,
     JSON_STRING,
@@ -22,21 +16,21 @@ enum JsonTag {
 
 struct JsonNode;
 
+#define JSON_VALUE_PAYLOAD_MASK 0x00007FFFFFFFFFFFULL
+#define JSON_VALUE_NAN_MASK 0x7FF8000000000000ULL
+#define JSON_VALUE_TAG_MASK 0xF
+#define JSON_VALUE_TAG_SHIFT 47
+
 union JsonValue {
     uint64_t ival;
     double fval;
 
-    JsonValue()
-        : ival(JSON_VALUE_NULL) {
-    }
     JsonValue(double x)
         : fval(x) {
     }
-    JsonValue(JsonTag tag, void *p) {
-        uint64_t x = (uint64_t)p;
-        assert(tag <= JSON_VALUE_TAG_MASK);
-        assert(x <= JSON_VALUE_PAYLOAD_MASK);
-        ival = JSON_VALUE_NAN_MASK | ((uint64_t)tag << JSON_VALUE_TAG_SHIFT) | x;
+    JsonValue(JsonTag tag = JSON_NULL, void *payload = nullptr) {
+        assert((uint64_t)payload <= JSON_VALUE_PAYLOAD_MASK);
+        ival = JSON_VALUE_NAN_MASK | ((uint64_t)tag << JSON_VALUE_TAG_SHIFT) | (uint64_t)payload;
     }
     bool isDouble() const {
         return (int64_t)ival <= (int64_t)JSON_VALUE_NAN_MASK;

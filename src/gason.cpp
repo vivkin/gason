@@ -255,19 +255,19 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
         case 't':
             if (!(s[0] == 'r' && s[1] == 'u' && s[2] == 'e' && isdelim(s[3])))
                 return JSON_BAD_IDENTIFIER;
-            o = JsonValue(JSON_TRUE, nullptr);
+            o = JsonValue(JSON_TRUE);
             s += 3;
             break;
         case 'f':
             if (!(s[0] == 'a' && s[1] == 'l' && s[2] == 's' && s[3] == 'e' && isdelim(s[4])))
                 return JSON_BAD_IDENTIFIER;
-            o = JsonValue(JSON_FALSE, nullptr);
+            o = JsonValue(JSON_FALSE);
             s += 4;
             break;
         case 'n':
             if (!(s[0] == 'u' && s[1] == 'l' && s[2] == 'l' && isdelim(s[3])))
                 return JSON_BAD_IDENTIFIER;
-            o = JsonValue(JSON_NULL, nullptr);
+            o = JsonValue(JSON_NULL);
             s += 3;
             break;
         case ']':
