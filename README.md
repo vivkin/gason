@@ -52,34 +52,37 @@ All **values** will become **invalid** when **allocator** be **destroyed**. For 
 ### Iteration
 ```cpp
 double sum_and_print(JsonValue o) {
-	double sum = 0;
-	switch (o.getTag()) {
-	case JSON_NUMBER:
-		printf("%g\n", o.toNumber());
-		sum += o.toNumber();
-		break;
-	case JSON_BOOL:
-		printf("%s\n", o.toBool() ? "true" : "false");
-		break;
-	case JSON_STRING:
-		printf("\"%s\"\n", o.toString());
-		break;
-	case JSON_ARRAY:
-		for (auto i : o) {
-			sum += sum_and_print(i->value);
-		}
-		break;
-	case JSON_OBJECT:
-		for (auto i : o) {
-			printf("%s = ", i->key);
-			sum += sum_and_print(i->value);
-		}
-		break;
-	case JSON_NULL:
-		printf("null\n");
-		break;
-	}
-	return sum;
+    double sum = 0;
+    switch (o.getTag()) {
+    case JSON_NUMBER:
+        printf("%g\n", o.toNumber());
+        sum += o.toNumber();
+        break;
+    case JSON_STRING:
+        printf("\"%s\"\n", o.toString());
+        break;
+    case JSON_ARRAY:
+        for (auto i : o) {
+            sum += sum_and_print(i->value);
+        }
+        break;
+    case JSON_OBJECT:
+        for (auto i : o) {
+            printf("%s = ", i->key);
+            sum += sum_and_print(i->value);
+        }
+        break;
+    case JSON_TRUE:
+        fprintf(stdout, "true");
+        break;
+    case JSON_FALSE:
+        fprintf(stdout, "false");
+        break;
+    case JSON_NULL:
+        printf("null\n");
+        break;
+    }
+    return sum;
 }
 ...
 double sum = sum_and_print(value);

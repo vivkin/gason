@@ -48,9 +48,6 @@ void dumpValue(JsonValue o, int indent = 0) {
     case JSON_NUMBER:
         fprintf(stdout, "%f", o.toNumber());
         break;
-    case JSON_BOOL:
-        fprintf(stdout, o.toBool() ? "true" : "false");
-        break;
     case JSON_STRING:
         dumpString(o.toString());
         break;
@@ -84,6 +81,12 @@ void dumpValue(JsonValue o, int indent = 0) {
             fprintf(stdout, i->next ? ",\n" : "\n");
         }
         fprintf(stdout, "%*s}", indent, "");
+        break;
+    case JSON_TRUE:
+        fprintf(stdout, "true");
+        break;
+    case JSON_FALSE:
+        fprintf(stdout, "false");
         break;
     case JSON_NULL:
         fprintf(stdout, "null");

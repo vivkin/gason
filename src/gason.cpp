@@ -253,31 +253,22 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
             }
             break;
         case 't':
-            for (const char *it = "rue"; *it; ++it, ++s) {
-                if (*it != *s)
-                    return JSON_BAD_IDENTIFIER;
-            }
-            if (!isdelim(*s))
+            if (!(s[0] == 'r' && s[1] == 'u' && s[2] == 'e' && isdelim(s[3])))
                 return JSON_BAD_IDENTIFIER;
-            o = JsonValue(JSON_BOOL, (void *)true);
+            o = JsonValue(JSON_TRUE, nullptr);
+            s += 3;
             break;
         case 'f':
-            for (const char *it = "alse"; *it; ++it, ++s) {
-                if (*it != *s)
-                    return JSON_BAD_IDENTIFIER;
-            }
-            if (!isdelim(*s))
+            if (!(s[0] == 'a' && s[1] == 'l' && s[2] == 's' && s[3] == 'e' && isdelim(s[4])))
                 return JSON_BAD_IDENTIFIER;
-            o = JsonValue(JSON_BOOL, (void *)false);
+            o = JsonValue(JSON_FALSE, nullptr);
+            s += 4;
             break;
         case 'n':
-            for (const char *it = "ull"; *it; ++it, ++s) {
-                if (*it != *s)
-                    return JSON_BAD_IDENTIFIER;
-            }
-            if (!isdelim(*s))
+            if (!(s[0] == 'u' && s[1] == 'l' && s[2] == 'l' && isdelim(s[3])))
                 return JSON_BAD_IDENTIFIER;
-            o = JsonValue();
+            o = JsonValue(JSON_NULL, nullptr);
+            s += 3;
             break;
         case ']':
             if (pos == -1)

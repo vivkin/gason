@@ -13,9 +13,10 @@
 enum JsonTag {
     JSON_NUMBER = 0,
     JSON_STRING,
-    JSON_BOOL,
     JSON_ARRAY,
     JSON_OBJECT,
+    JSON_TRUE,
+    JSON_FALSE,
     JSON_NULL = 0xF
 };
 
@@ -50,10 +51,6 @@ union JsonValue {
     double toNumber() const {
         assert(getTag() == JSON_NUMBER);
         return fval;
-    }
-    bool toBool() const {
-        assert(getTag() == JSON_BOOL);
-        return (bool)getPayload();
     }
     char *toString() const {
         assert(getTag() == JSON_STRING);
