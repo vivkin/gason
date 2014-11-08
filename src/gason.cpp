@@ -46,20 +46,6 @@ void JsonAllocator::deallocate() {
     }
 }
 
-#ifdef __SSE4_2__
-#include <nmmintrin.h>
-#define cmpistri(haystack, needle, flags)                             \
-    do {                                                              \
-        __m128i a = _mm_loadu_si128((const __m128i *)(needle));       \
-        int i;                                                        \
-        do {                                                          \
-            __m128i b = _mm_loadu_si128((const __m128i *)(haystack)); \
-            i = _mm_cmpistri(a, b, flags);                            \
-            haystack += i;                                            \
-        } while (i == 16);                                            \
-    } while (0)
-#endif
-
 static inline bool isspace(char c) {
     return c == ' ' || (c >= '\t' && c <= '\r');
 }
@@ -155,11 +141,8 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
     *endptr = s;
 
     while (*s) {
-#ifdef __SSE4_2__
-        cmpistri(s, "\x20\t\n\v\f\r", _SIDD_NEGATIVE_POLARITY);
-#else
-        while (isspace(*s)) ++s;
-#endif
+        while (isspace(*s))
+            ++s;
         *endptr = s++;
         switch (**endptr) {
         case '-':
@@ -185,9 +168,6 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
             break;
         case '"':
             o = JsonValue(JSON_STRING, s);
-#ifdef __SSE4_2__
-            cmpistri(s, "\"\\\t\n", 0);
-#endif
             for (char *it = s; *s; ++it, ++s) {
                 int c = *it = *s;
                 if (c == '\\') {
