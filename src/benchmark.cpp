@@ -191,7 +191,23 @@ static void print(const Stat &stat) {
            stat.parserName);
 }
 
+#if defined(__clang__)
+#define COMPILER "Clang " __clang_version__
+#elif defined(__GNUC__)
+#define COMPILER "GCC " __VERSION__
+#endif
+
+#ifndef __x86_64__
+#define __x86_64__ 0
+#endif
+
+#ifndef NDEBUG
+#define NDEBUG 0
+#endif
+
 int main(int argc, const char **argv) {
+    printf("gason benchmark, %s, x86_64 %d, SIZEOF_POINTER %d, NDEBUG %d\n", COMPILER, __x86_64__, __SIZEOF_POINTER__, NDEBUG);
+
     size_t iterations = 10;
     for (int i = 1; i < argc; ++i) {
         if (!strcmp("-n", argv[i])) {
@@ -212,6 +228,7 @@ int main(int argc, const char **argv) {
         fread(buffer.data(), 1, size, fp);
         fclose(fp);
 
+        putchar('\n');
         printf("%s, %zdB x %zd:\n", argv[i], size, iterations);
         printf("%8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %11s %11s %11s\n",
                "Object",
@@ -231,7 +248,6 @@ int main(int argc, const char **argv) {
         print(run<Rapid>(iterations, buffer));
         print(run<RapidInsitu>(iterations, buffer));
         print(run<Gason>(iterations, buffer));
-        putchar('\n');
     }
     return 0;
 }
