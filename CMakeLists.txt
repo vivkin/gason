@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.0.0)
-project(gason VERSION 1.0.0)
+cmake_minimum_required(VERSION 2.8.12)
+project(gason)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions")
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
