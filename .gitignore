@@ -1,6 +1,6 @@
 .DS_Store
 *.swp
-*.json
+data/*.json
 build
 build-debug
 build-release
