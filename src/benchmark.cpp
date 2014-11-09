@@ -4,22 +4,31 @@
 #include <stdio.h>
 #include <vector>
 
-#if defined(__MACH__)
-#include <mach/mach_time.h>
-#elif defined(__linux__)
+#if defined(__linux__)
 #include <time.h>
+#elif defined(__MACH__)
+#include <mach/mach_time.h>
+#elif defined(_WIN32)
+#include <windows.h>
 #endif
 
 uint64_t nanotime() {
-#if defined(__MACH__)
+#if defined(__linux__)
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * UINT64_C(1000000000) + ts.tv_nsec;
+#elif defined(__MACH__)
     static mach_timebase_info_data_t info;
     if (info.denom == 0)
         mach_timebase_info(&info);
     return mach_absolute_time() * info.numer / info.denom;
-#elif defined(__linux__)
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec * UINT64_C(1000000000) + ts.tv_nsec;
+#elif defined(_WIN32)
+    static LARGE_INTEGER frequency;
+    if (frequency.QuadPart == 0)
+        QueryPerformanceFrequency(&frequency);
+    LARGE_INTEGER counter;
+    QueryPerformanceCounter(&counter);
+    return counter.QuadPart * UINT64_C(1000000000) / frequency.QuadPart;
 #endif
 }
 
