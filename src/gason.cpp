@@ -70,7 +70,7 @@ static inline int char2int(char c) {
 
 static double string2double(char *s, char **endptr) {
     char ch = *s;
-    if (ch == '+' || ch == '-')
+    if (ch == '-')
         ++s;
 
     double result = 0;
