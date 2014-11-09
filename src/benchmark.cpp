@@ -1,7 +1,27 @@
+#include <stdint.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
-#include <chrono>
+
+#if defined(__MACH__)
+#include <mach/mach_time.h>
+#elif defined(__linux__)
+#include <time.h>
+#endif
+
+uint64_t nanotime() {
+#if defined(__MACH__)
+    static mach_timebase_info_data_t info;
+    if (info.denom == 0)
+        mach_timebase_info(&info);
+    return mach_absolute_time() * info.numer / info.denom;
+#elif defined(__linux__)
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * UINT64_C(1000000000) + ts.tv_nsec;
+#endif
+}
 
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
@@ -20,8 +40,8 @@ struct Stat {
     size_t memberCount;
     size_t elementCount;
     size_t stringLength;
-    std::chrono::nanoseconds parseTime;
-    std::chrono::nanoseconds updateTime;
+    uint64_t parseTime;
+    uint64_t updateTime;
 };
 
 struct Rapid {
@@ -158,22 +178,22 @@ static Stat run(size_t iterations, const std::vector<char> &buffer) {
 
     std::vector<T> docs(iterations);
 
-    auto t = std::chrono::high_resolution_clock::now();
+    auto t = nanotime();
     for (auto &i : docs) {
         i.parse(buffer);
     }
-    stat.parseTime += std::chrono::high_resolution_clock::now() - t;
+    stat.parseTime += nanotime() - t;
 
-    t = std::chrono::high_resolution_clock::now();
+    t = nanotime();
     for (auto &i : docs)
         i.update(stat);
-    stat.updateTime += std::chrono::high_resolution_clock::now() - t;
+    stat.updateTime += nanotime() - t;
 
     return stat;
 }
 
 static void print(const Stat &stat) {
-    printf("%8zd %8zd %8zd %8zd %8zd %8zd %8zd %8zd %8zd %8zd %8zd %11llu %11llu %11.3f %s\n",
+    printf("%8zd %8zd %8zd %8zd %8zd %8zd %8zd %8zd %8zd %8zd %8zd %11.2f %11.2f %11.2f %s\n",
            stat.objectCount,
            stat.arrayCount,
            stat.numberCount,
@@ -185,9 +205,9 @@ static void print(const Stat &stat) {
            stat.elementCount,
            stat.stringLength,
            stat.sourceSize,
-           stat.updateTime.count(),
-           stat.parseTime.count(),
-           stat.sourceSize / std::chrono::duration<double>(stat.parseTime).count() / (1 << 20),
+           stat.updateTime / 1e6,
+           stat.parseTime / 1e6,
+           stat.sourceSize / (stat.parseTime / 1e9) / (1 << 20),
            stat.parserName);
 }
 
@@ -242,8 +262,8 @@ int main(int argc, const char **argv) {
                "Element",
                "StrLen",
                "Size",
-               "Update(ns)",
-               "Parse(ns)",
+               "Update(ms)",
+               "Parse(ms)",
                "Speed(Mb/s)");
         print(run<Rapid>(iterations, buffer));
         print(run<RapidInsitu>(iterations, buffer));
