@@ -37,20 +37,17 @@ uint64_t nanotime() {
 #include "gason.h"
 
 struct Stat {
-    const char *parserName;
-    size_t sourceSize;
-    size_t objectCount;
-    size_t arrayCount;
     size_t numberCount;
     size_t stringCount;
-    size_t trueCount;
+    size_t objectCount;
+    size_t arrayCount;
     size_t falseCount;
+    size_t trueCount;
     size_t nullCount;
-    size_t memberCount;
-    size_t elementCount;
-    size_t stringLength;
+    size_t sourceSize;
     uint64_t parseTime;
     uint64_t updateTime;
+    const char *parserName;
 };
 
 struct Rapid {
@@ -80,22 +77,18 @@ struct Rapid {
             break;
         case kObjectType:
             for (Value::ConstMemberIterator m = v.MemberBegin(); m != v.MemberEnd(); ++m) {
-                stat.stringLength += m->name.GetStringLength();
                 genStat(stat, m->value);
             }
             stat.objectCount++;
-            stat.memberCount += (v.MemberEnd() - v.MemberBegin());
             stat.stringCount += (v.MemberEnd() - v.MemberBegin());
             break;
         case kArrayType:
             for (Value::ConstValueIterator i = v.Begin(); i != v.End(); ++i)
                 genStat(stat, *i);
             stat.arrayCount++;
-            stat.elementCount += v.Size();
             break;
         case kStringType:
             stat.stringCount++;
-            stat.stringLength += v.GetStringLength();
             break;
         case kNumberType:
             stat.numberCount++;
@@ -142,22 +135,18 @@ struct Gason {
         case JSON_ARRAY:
             for (auto i : v) {
                 genStat(stat, i->value);
-                stat.elementCount++;
             }
             stat.arrayCount++;
             break;
         case JSON_OBJECT:
             for (auto i : v) {
                 genStat(stat, i->value);
-                stat.memberCount++;
-                stat.stringLength += strlen(i->key);
                 stat.stringCount++;
             }
             stat.objectCount++;
             break;
         case JSON_STRING:
             stat.stringCount++;
-            stat.stringLength += strlen(v.toString());
             break;
         case JSON_NUMBER:
             stat.numberCount++;
@@ -182,8 +171,6 @@ template <typename T>
 static Stat run(size_t iterations, const std::vector<char> &buffer) {
     Stat stat;
     memset(&stat, 0, sizeof(stat));
-    stat.parserName = T::name();
-    stat.sourceSize = buffer.size() * iterations;
 
     std::vector<T> docs(iterations);
 
@@ -198,25 +185,25 @@ static Stat run(size_t iterations, const std::vector<char> &buffer) {
         i.update(stat);
     stat.updateTime += nanotime() - t;
 
+    stat.sourceSize = buffer.size() * iterations;
+    stat.parserName = T::name();
+
     return stat;
 }
 
 static void print(const Stat &stat) {
-    printf("%8zd %8zd %8zd %8zd %8zd %8zd %8zd %8zd %8zd %8zd %8zd %11.2f %11.2f %11.2f %s\n",
-           stat.objectCount,
-           stat.arrayCount,
+    printf("%7zd %7zd %7zd %7zd %7zd %7zd %7zd %7.2f %7.2f %7.2f %7.2f %s\n",
            stat.numberCount,
            stat.stringCount,
-           stat.trueCount,
+           stat.objectCount,
+           stat.arrayCount,
            stat.falseCount,
+           stat.trueCount,
            stat.nullCount,
-           stat.memberCount,
-           stat.elementCount,
-           stat.stringLength,
-           stat.sourceSize,
+           stat.sourceSize / 1048576.0,
            stat.updateTime / 1e6,
            stat.parseTime / 1e6,
-           stat.sourceSize / (stat.parseTime / 1e9) / (1 << 20),
+           stat.sourceSize / (stat.parseTime / 1e9) / 1048576.0,
            stat.parserName);
 }
 
@@ -236,6 +223,9 @@ static void print(const Stat &stat) {
 
 int main(int argc, const char **argv) {
     printf("gason benchmark, %s, x86_64 %d, SIZEOF_POINTER %d, NDEBUG %d\n", COMPILER, __x86_64__, __SIZEOF_POINTER__, NDEBUG);
+
+    printf("%7s %7s %7s %7s %7s %7s %7s %7s %7s %7s %7s\n",
+           "Number", "String", "Object", "Array", "False", "True", "Null", "Size", "Update", "Parse", "Speed");
 
     size_t iterations = 10;
     for (int i = 1; i < argc; ++i) {
@@ -257,23 +247,8 @@ int main(int argc, const char **argv) {
         fread(buffer.data(), 1, size, fp);
         fclose(fp);
 
-        putchar('\n');
-        printf("%s, %zdB x %zd:\n", argv[i], size, iterations);
-        printf("%8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %11s %11s %11s\n",
-               "Object",
-               "Array",
-               "Number",
-               "String",
-               "True",
-               "False",
-               "Null",
-               "Member",
-               "Element",
-               "StrLen",
-               "Size",
-               "Update(ms)",
-               "Parse(ms)",
-               "Speed(Mb/s)");
+        printf("%7c %7c %7c %7c %7c %7c %7c %7c %7c %7c %7c %s, %zd x %zd\n",
+               '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', argv[i], size, iterations);
         print(run<Rapid>(iterations, buffer));
         print(run<RapidInsitu>(iterations, buffer));
         print(run<Gason>(iterations, buffer));
