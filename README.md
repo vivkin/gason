@@ -164,4 +164,4 @@ I/ruberoid( 8944):  rapidjson       7464us       1745us 	(34474757.667613)
 ```
 
 ## License
-Distributed under the MIT license. Copyright (c) 2013-2014, Ivan Vashchaev
+Distributed under the MIT license. Copyright (c) 2013-2015, Ivan Vashchaev
