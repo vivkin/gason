@@ -141,8 +141,10 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
     *endptr = s;
 
     while (*s) {
-        while (isspace(*s))
+        while (isspace(*s)) {
             ++s;
+            if (!*s) break;
+        }
         *endptr = s++;
         switch (**endptr) {
         case '-':
