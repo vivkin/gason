@@ -27,6 +27,8 @@ void parse(const char *csource, bool ok) {
 
 int main() {
       pass(u8R"json(1234567890)json");
+      pass(u8R"json(1e-21474836311)json");
+      pass(u8R"json(1e-42147483631)json");
       pass(u8R"json("A JSON payload should be an object or array, not a string.")json");
       fail(u8R"json(["Unclosed array")json");
       fail(u8R"json({unquoted_key: "keys must be quoted"})json");

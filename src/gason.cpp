@@ -98,7 +98,7 @@ static double string2double(char *s, char **endptr) {
             base = 0.1;
         }
 
-        int exponent = 0;
+        unsigned int exponent = 0;
         while (isdigit(*s))
             exponent = (exponent * 10) + (*s++ - '0');
 
