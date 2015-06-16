@@ -1,6 +1,7 @@
 #include "gason.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static int parsed;
 static int failed;
