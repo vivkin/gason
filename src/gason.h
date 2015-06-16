@@ -96,7 +96,8 @@ inline JsonIterator end(JsonValue) {
     XX(MISMATCH_BRACKET, "mismatch bracket")         \
     XX(UNEXPECTED_CHARACTER, "unexpected character") \
     XX(UNQUOTED_KEY, "unquoted key")                 \
-    XX(BREAKING_BAD, "breaking bad")
+    XX(BREAKING_BAD, "breaking bad")                 \
+    XX(ALLOCATION_FAILURE, "allocation failure")
 
 enum JsonErrno {
 #define XX(no, str) JSON_##no,

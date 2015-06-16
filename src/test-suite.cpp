@@ -20,6 +20,7 @@ void parse(const char *csource, bool ok) {
         ++failed;
     }
     ++parsed;
+    free(source);
 }
 
 #define pass(csource) parse(csource, true)
