@@ -1,6 +1,7 @@
 #include "gason.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static int parsed;
 static int failed;
@@ -20,6 +21,7 @@ void parse(const char *csource, bool ok) {
         ++failed;
     }
     ++parsed;
+    free(source);
 }
 
 #define pass(csource) parse(csource, true)
