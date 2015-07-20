@@ -71,8 +71,8 @@ struct JsonIterator {
     bool operator!=(const JsonIterator &x) const {
         return p != x.p;
     }
-    JsonNode *operator*() const {
-        return p;
+    JsonNode& operator*() const {
+        return *p;
     }
     JsonNode *operator->() const {
         return p;

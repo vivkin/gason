@@ -134,13 +134,13 @@ struct Gason {
         switch (v.getTag()) {
         case JSON_ARRAY:
             for (auto i : v) {
-                genStat(stat, i->value);
+                genStat(stat, i.value);
             }
             stat.arrayCount++;
             break;
         case JSON_OBJECT:
             for (auto i : v) {
-                genStat(stat, i->value);
+                genStat(stat, i.value);
                 stat.stringCount++;
             }
             stat.objectCount++;
