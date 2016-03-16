@@ -62,8 +62,8 @@ void dumpValue(JsonValue o, int indent = 0) {
         fprintf(stdout, "[\n");
         for (auto i : o) {
             fprintf(stdout, "%*s", indent + SHIFT_WIDTH, "");
-            dumpValue(i->value, indent + SHIFT_WIDTH);
-            fprintf(stdout, i->next ? ",\n" : "\n");
+            dumpValue(i.value, indent + SHIFT_WIDTH);
+            fprintf(stdout, i.next ? ",\n" : "\n");
         }
         fprintf(stdout, "%*s]", indent, "");
         break;
@@ -75,10 +75,10 @@ void dumpValue(JsonValue o, int indent = 0) {
         fprintf(stdout, "{\n");
         for (auto i : o) {
             fprintf(stdout, "%*s", indent + SHIFT_WIDTH, "");
-            dumpString(i->key);
+            dumpString(i.key);
             fprintf(stdout, ": ");
-            dumpValue(i->value, indent + SHIFT_WIDTH);
-            fprintf(stdout, i->next ? ",\n" : "\n");
+            dumpValue(i.value, indent + SHIFT_WIDTH);
+            fprintf(stdout, i.next ? ",\n" : "\n");
         }
         fprintf(stdout, "%*s}", indent, "");
         break;
