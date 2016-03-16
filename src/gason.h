@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <stdint.h>
 #include <stddef.h>
 #include <assert.h>
@@ -16,10 +17,10 @@ enum JsonTag {
 
 struct JsonNode;
 
-#define JSON_VALUE_PAYLOAD_MASK 0x00007FFFFFFFFFFFULL
-#define JSON_VALUE_NAN_MASK 0x7FF8000000000000ULL
-#define JSON_VALUE_TAG_MASK 0xF
-#define JSON_VALUE_TAG_SHIFT 47
+constexpr unsigned long long JSON_VALUE_PAYLOAD_MASK = 0x00007FFFFFFFFFFFULL;
+constexpr unsigned long long JSON_VALUE_NAN_MASK = 0x7FF8000000000000ULL;
+constexpr unsigned long long JSON_VALUE_TAG_MASK = 0xF;
+constexpr unsigned long long JSON_VALUE_TAG_SHIFT = 47;
 
 union JsonValue {
     uint64_t ival;

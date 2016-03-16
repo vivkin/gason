@@ -1,8 +1,8 @@
 #include "gason.h"
 #include <stdlib.h>
 
-#define JSON_ZONE_SIZE 4096
-#define JSON_STACK_SIZE 32
+constexpr size_t JSON_ZONE_SIZE = 4096;
+constexpr size_t JSON_STACK_SIZE = 32;
 
 const char *jsonStrError(int err) {
     switch (err) {
@@ -272,7 +272,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
             o = listToValue(JSON_OBJECT, tails[pos--]);
             break;
         case '[':
-            if (++pos == JSON_STACK_SIZE)
+            if (++pos == static_cast<int>(JSON_STACK_SIZE))
                 return JSON_STACK_OVERFLOW;
             tails[pos] = nullptr;
             tags[pos] = JSON_ARRAY;
@@ -280,7 +280,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
             separator = true;
             continue;
         case '{':
-            if (++pos == JSON_STACK_SIZE)
+            if (++pos == static_cast<int>(JSON_STACK_SIZE))
                 return JSON_STACK_OVERFLOW;
             tails[pos] = nullptr;
             tags[pos] = JSON_OBJECT;
