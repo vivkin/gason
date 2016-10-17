@@ -111,10 +111,10 @@ class JsonAllocator {
     struct Zone {
         Zone *next;
         size_t used;
-    } *head = nullptr;
+    } *head;
 
 public:
-    JsonAllocator() = default;
+    JsonAllocator() : head(nullptr) {};
     JsonAllocator(const JsonAllocator &) = delete;
     JsonAllocator &operator=(const JsonAllocator &) = delete;
     JsonAllocator(JsonAllocator &&x) : head(x.head) {
