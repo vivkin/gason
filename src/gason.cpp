@@ -133,7 +133,7 @@ static inline JsonValue listToValue(JsonTag tag, JsonNode *tail) {
     return JsonValue(tag, nullptr);
 }
 
-int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator) {
+int jsonParse(const char *s, char **endptr, JsonValue *value, JsonAllocator &allocator) {
     JsonNode *tails[JSON_STACK_SIZE];
     JsonTag tags[JSON_STACK_SIZE];
     char *keys[JSON_STACK_SIZE];

@@ -132,4 +132,4 @@ public:
     void deallocate();
 };
 
-int jsonParse(char *str, char **endptr, JsonValue *value, JsonAllocator &allocator);
+int jsonParse(const char *str, char **endptr, JsonValue *value, JsonAllocator &allocator);
