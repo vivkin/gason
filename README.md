@@ -23,7 +23,7 @@ gason is **not strict** parser:
 * Single number, string or identifier will be succesfully parsed
 * Trailing `,` before closing `]` or `}` is not an error
 
-gason is **destructive** parser, i.e. you **source buffer** will be **modified**! Strings stored as pointers to source buffer, where closing `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects are represented as single linked list (without random access).
+gason is **destructive** parser, i.e. your **source buffer** will be **modified**! Strings stored as pointers to source buffer, where closing `"` (or any other symbol, if string have escape sequences) replaced with `'\0'`. Arrays and objects are represented as single linked list (without random access).
 
 ## Installation
 1. Download latest [gason.h](https://raw.github.com/vivkin/gason/master/src/gason.h) and [gason.cpp](https://raw.github.com/vivkin/gason/master/src/gason.cpp)
