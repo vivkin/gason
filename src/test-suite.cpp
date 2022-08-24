@@ -1,4 +1,5 @@
 #include "gason.h"
+#include "gason_write.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -136,6 +137,86 @@ break"])json");
 1e-1,
 1e00,2e+00,2e-00
 ,"rosebud"])json");
+
+    { // test writing 
+        static char str[] =
+R"json(
+{"widget": {
+    "debug": "on",
+    "window": {
+        "title": "Sample Konfabulator Widget",
+        "name": "main_window",
+        "width": 500,
+        "height": 500
+    },
+    "image": {
+        "src": "Images/Sun.png",
+        "name": "sun1",
+        "hOffset": 250,
+        "vOffset": 250,
+        "alignment": "center"
+    },
+    "text": {
+        "data": "Click Here",
+        "size": 36,
+        "style": "bold",
+        "name": "text1",
+        "hOffset": 250,
+        "vOffset": 100,
+        "alignment": "center",
+        "onMouseUp": "sun1.opacity = (sun1.opacity / 100) * 90;"
+    }
+}}
+)json";
+
+        static char expectedResult[] =
+R"json({
+	"widget": {
+		"debug": "on",
+		"window": {
+			"title": "Sample Konfabulator Widget",
+			"name": "main_window",
+			"width": 500,
+			"height": 500
+		},
+		"image": {
+			"src": "Images/Sun.png",
+			"name": "sun1",
+			"hOffset": 250,
+			"vOffset": 250,
+			"alignment": "center"
+		},
+		"text": {
+			"data": "Click Here",
+			"size": 36,
+			"style": "bold",
+			"name": "text1",
+			"hOffset": 250,
+			"vOffset": 100,
+			"alignment": "center",
+			"onMouseUp": "sun1.opacity = (sun1.opacity / 100) * 90;"
+		}
+	}
+})json";
+
+        JsonValue value;
+        JsonAllocator allocator;
+        char* endPtr;
+        jsonParse(str, &endPtr, &value, allocator);
+
+        const size_t resultLen = jsonWrite(value, 0, nullptr);
+        char* result = new char[resultLen+1];
+        jsonWrite(value, resultLen, result);
+        //printf("%s\n", result);
+
+        if (strcmp(result, expectedResult)) {
+            printf("FAILED %d: in jsonWrite test\n", parsed);
+            failed = true;
+        }
+        parsed++;
+
+        delete[] result;
+    }
 
     if (failed)
         fprintf(stderr, "%d/%d TESTS FAILED\n", failed, parsed);
