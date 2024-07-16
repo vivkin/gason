@@ -155,6 +155,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
                 *endptr = s;
                 return JSON_BAD_NUMBER;
             }
+            [[fallthrough]];
         case '0':
         case '1':
         case '2':
