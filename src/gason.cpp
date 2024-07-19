@@ -4,6 +4,12 @@
 #define JSON_ZONE_SIZE 4096
 #define JSON_STACK_SIZE 32
 
+#if __cplusplus >= 201703L
+#define INTENTIONAL_FALLTHROUGH [[fallthrough]]
+#else
+#define INTENTIONAL_FALLTHROUGH (void)0
+#endif
+
 const char *jsonStrError(int err) {
     switch (err) {
 #define XX(no, str) \
@@ -155,7 +161,7 @@ int jsonParse(char *s, char **endptr, JsonValue *value, JsonAllocator &allocator
                 *endptr = s;
                 return JSON_BAD_NUMBER;
             }
-            [[fallthrough]];
+            INTENTIONAL_FALLTHROUGH;
         case '0':
         case '1':
         case '2':
