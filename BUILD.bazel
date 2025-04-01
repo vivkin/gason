@@ -1,0 +1,80 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("//:tools.bzl", "download_data")
+
+cc_library(
+    name = "gason",
+    srcs = ["src/gason.cpp"],
+    hdrs = ["src/gason.h"],
+    includes = ["src"],  # Expose for import without src prefix
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "pretty-print",
+    srcs = ["src/pretty-print.cpp"],
+    deps = [":gason"],
+)
+
+test_suite(
+    name = "all_tests",
+    tests = [
+        "benchmark",
+        "test-suite",
+    ],
+)
+
+cc_test(
+    name = "test-suite",
+    size = "small",
+    srcs = ["src/test-suite.cpp"],
+    copts = [
+        "-g",  # Debug symbols
+        "-Wall",  # All warnings
+    ],
+    deps = [":gason"],
+)
+
+# NOTE: To see benchmark output, use `bazel test //:benchmark --test_output=all`
+cc_test(
+    name = "benchmark",
+    size = "small",
+    srcs = ["src/benchmark.cpp"],
+    args = [
+        "$(location :canada_data)",
+        "$(location :big_data)",
+        "$(location :citm_catalog_data)",
+        "-n",
+        "10",
+    ],
+    copts = [
+        "-g",  # Debug symbols
+        "-Wall",  # All warnings
+    ],
+    data = [
+        ":big_data",
+        ":canada_data",
+        ":citm_catalog_data",
+    ],
+    deps = [
+        ":gason",
+        "@rapidjson",
+    ],
+)
+
+download_data(
+    name = "canada_data",
+    sha256 = "bfbc12b8b6da35cdcc15046304be1739a82a335de17ef9959ea3dd75225467a4",
+    url = "https://raw.githubusercontent.com/mloskot/json_benchmark/master/data/canada.json",
+)
+
+download_data(
+    name = "big_data",
+    sha256 = "73b421d426fd561d0828970a46ccfe2a6e7213c97079676fb8574d4cd42f6527",
+    url = "https://raw.githubusercontent.com/Newbilius/big_json_import_demo/master/test_data/big.json",
+)
+
+download_data(
+    name = "citm_catalog_data",
+    sha256 = "a73e7a883f6ea8de113dff59702975e60119b4b58d451d518a929f31c92e2059",
+    url = "https://raw.githubusercontent.com/RichardHightower/json-parsers-benchmark/master/data/citm_catalog.json",
+)

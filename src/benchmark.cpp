@@ -228,6 +228,11 @@ int main(int argc, const char **argv) {
            "Number", "String", "Object", "Array", "False", "True", "Null", "Size", "Update", "Parse", "Speed");
 
     size_t iterations = 10;
+    if (argc < 2) {
+        fprintf(stderr, "Error: No input file specified\n");
+        return 1;
+    }
+
     for (int i = 1; i < argc; ++i) {
         if (!strcmp("-n", argv[i])) {
             iterations = strtol(argv[++i], NULL, 0);
