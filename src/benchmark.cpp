@@ -226,6 +226,11 @@ static void print(const Stat &stat) {
 #endif
 
 int main(int argc, const char **argv) {
+    printf("argc: %d\n", argc);
+    for (int i = 0; i < argc; ++i) {
+        printf("argv[%d]: %s\n", i, argv[i]);
+    }
+
     printf("gason benchmark, %s, x86_64 %d, SIZEOF_POINTER %zu, NDEBUG %d\n", COMPILER, __x86_64__, sizeof(void*), NDEBUG);
 
     printf("%7s %7s %7s %7s %7s %7s %7s %7s %7s %7s %7s\n",
