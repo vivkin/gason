@@ -211,6 +211,8 @@ static void print(const Stat &stat) {
 #define COMPILER "Clang " __clang_version__
 #elif defined(__GNUC__)
 #define COMPILER "GCC " __VERSION__
+#else
+#define COMPILER "Unknown"
 #endif
 
 #ifndef __x86_64__
@@ -222,7 +224,7 @@ static void print(const Stat &stat) {
 #endif
 
 int main(int argc, const char **argv) {
-    printf("gason benchmark, %s, x86_64 %d, SIZEOF_POINTER %d, NDEBUG %d\n", COMPILER, __x86_64__, __SIZEOF_POINTER__, NDEBUG);
+    printf("gason benchmark, %s, x86_64 %d, SIZEOF_POINTER %d, NDEBUG %d\n", COMPILER, __x86_64__, sizeof(void*), NDEBUG);
 
     printf("%7s %7s %7s %7s %7s %7s %7s %7s %7s %7s %7s\n",
            "Number", "String", "Object", "Array", "False", "True", "Null", "Size", "Update", "Parse", "Speed");

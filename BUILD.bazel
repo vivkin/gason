@@ -23,14 +23,19 @@ test_suite(
     ],
 )
 
+COPTS = select({
+    "@platforms//os:windows": [],
+    "//conditions:default": [
+        "-g",  # Debug symbols
+        "-Wall",  # All warnings
+    ],
+})
+
 cc_test(
     name = "test-suite",
     size = "small",
     srcs = ["src/test-suite.cpp"],
-    copts = [
-        "-g",  # Debug symbols
-        "-Wall",  # All warnings
-    ],
+    copts = COPTS,
     deps = [":gason"],
 )
 
@@ -46,10 +51,7 @@ cc_test(
         "-n",
         "10",
     ],
-    copts = [
-        "-g",  # Debug symbols
-        "-Wall",  # All warnings
-    ],
+    copts = COPTS,
     data = [
         ":big_data",
         ":canada_data",
