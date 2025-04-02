@@ -138,9 +138,9 @@ break"])json");
 ,"rosebud"])json");
 
     if (failed)
-        fprintf(stderr, "%d/%d TESTS FAILED\n", failed, parsed);
+       { fprintf(stderr, "%d/%d TESTS FAILED\n", failed, parsed);
+        return 1;}
     else
-        fprintf(stderr, "ALL TESTS PASSED\n");
-
-    return 0;
+        {fprintf(stderr, "ALL TESTS PASSED\n");
+        return 0;}
 }
