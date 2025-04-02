@@ -12,7 +12,7 @@ def _download_data_impl(ctx):
 
     if is_windows:
         # Windows-specific commands
-        download_command = 'powershell -Command "Invoke-WebRequest -Uri %s -OutFile %s"' % (url, output_file.path)
+        download_command = 'curl -L "%s" -o "%s"' % (url, output_file.path)
 
         # Use certutil for SHA256 on Windows
         hash_command = 'certutil -hashfile "%s" SHA256 | findstr /v "hash" > "%s"' % (output_file.path, hash_output.path)
