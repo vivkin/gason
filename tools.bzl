@@ -7,28 +7,40 @@ def _download_data_impl(ctx):
     output_file = ctx.actions.declare_file(ctx.label.name + ".json")  # Downloaded file
     hash_output = ctx.actions.declare_file(ctx.label.name + ".sha256")  # File to store computed hash
 
-    # Download the file and compute its SHA-256 hash
-    download_command = "curl -s %s > %s" % (url, output_file.path)
-    hash_command = "openssl dgst -sha256 %s | cut -d' ' -f2 > %s" % (output_file.path, hash_output.path)
-    verify_command = """
-        computed=$(cat {hash_output})
-        if [ "$computed" != "{expected_sha256}" ]; then
-            echo "SHA-256 mismatch!"
-            echo "Expected: {expected_sha256}"
-            echo "Got:      $computed"
-            exit 1
-        fi
-    """.format(
-        hash_output = hash_output.path,
-        expected_sha256 = expected_sha256,
-    )
+    # Determine if we're on Windows based on the host platform
+    is_windows = ctx.var.get("HOST_OS", "linux").lower() == "windows"
 
-    # Combine all commands into a single shell script
-    full_command = " && ".join([
-        download_command,
-        hash_command,
-        verify_command,
-    ])
+    if is_windows:
+        # Windows-specific commands
+        download_command = 'powershell -Command "Invoke-WebRequest -Uri \\"%s\\" -OutFile \\"%s\\""' % (url, output_file.path)
+
+        # Use certutil for SHA256 on Windows
+        hash_command = 'certutil -hashfile "%s" SHA256 | findstr /v "hash" > "%s"' % (output_file.path, hash_output.path)
+        verify_command = """
+            set /p computed=<"%s"
+            set "computed=!computed: =!"
+            if /i "!computed!" NEQ "%s" (
+                echo SHA-256 mismatch!
+                echo Expected: %s
+                echo Got:      !computed!
+                exit /b 1
+            )
+        """ % (hash_output.path, expected_sha256, expected_sha256)
+        full_command = " && ".join([download_command, hash_command, verify_command])
+    else:
+        # Unix-specific commands
+        download_command = "curl -s %s -o %s" % (url, output_file.path)
+        hash_command = "openssl dgst -sha256 %s | cut -d' ' -f2 > %s" % (output_file.path, hash_output.path)
+        verify_command = """
+            computed=$(cat %s)
+            if [ "$computed" != "%s" ]; then
+                echo "SHA-256 mismatch!"
+                echo "Expected: %s"
+                echo "Got:      $computed"
+                exit 1
+            fi
+        """ % (hash_output.path, expected_sha256, expected_sha256)
+        full_command = " && ".join([download_command, hash_command, verify_command])
 
     # Execute the download and verification
     ctx.actions.run_shell(
@@ -37,6 +49,7 @@ def _download_data_impl(ctx):
         command = full_command,
         mnemonic = "DownloadAndVerify",
         progress_message = "Downloading and verifying test data from %s" % url,
+        arguments = ["/C" if is_windows else "-c", full_command],  # Specify the shell to use
     )
 
     # Return the downloaded file as a provider
