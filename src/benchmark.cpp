@@ -211,6 +211,8 @@ static void print(const Stat &stat) {
 #define COMPILER "Clang " __clang_version__
 #elif defined(__GNUC__)
 #define COMPILER "GCC " __VERSION__
+#elif defined(_MSC_VER)
+#define COMPILER "MSVC"
 #else
 #define COMPILER "Unknown"
 #endif
@@ -224,7 +226,7 @@ static void print(const Stat &stat) {
 #endif
 
 int main(int argc, const char **argv) {
-    printf("gason benchmark, %s, x86_64 %d, SIZEOF_POINTER %d, NDEBUG %d\n", COMPILER, __x86_64__, sizeof(void*), NDEBUG);
+    printf("gason benchmark, %s, x86_64 %d, SIZEOF_POINTER %zu, NDEBUG %d\n", COMPILER, __x86_64__, sizeof(void*), NDEBUG);
 
     printf("%7s %7s %7s %7s %7s %7s %7s %7s %7s %7s %7s\n",
            "Number", "String", "Object", "Array", "False", "True", "Null", "Size", "Update", "Parse", "Speed");
@@ -241,7 +243,7 @@ int main(int argc, const char **argv) {
             continue;
         }
 
-        FILE *fp = fopen(argv[i], "r");
+        FILE *fp = fopen(argv[i], "rb");
         if (!fp) {
             perror(argv[i]);
             exit(EXIT_FAILURE);
